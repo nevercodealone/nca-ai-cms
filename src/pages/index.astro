@@ -1,16 +1,41 @@
 ---
-
+import Layout from '../layouts/Layout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Home">
+  <div class="container">
+    <div style="text-align: center; padding: 4rem 0;">
+      <h1 style="font-size: 3rem; margin-bottom: 1rem;">NCA Content Marketing System</h1>
+      <p style="font-size: 1.25rem; color: #94a3b8; margin-bottom: 2rem;">
+        Automatisierte Fachartikel-Generierung für Web-Accessibility
+      </p>
+      <a
+        href="/editor"
+        style="display: inline-block; padding: 1rem 2rem; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;"
+      >
+        Editor öffnen →
+      </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 4rem;">
+      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
+        <h3 style="margin-bottom: 0.5rem;">📄 Content aus Quellen</h3>
+        <p style="color: #94a3b8; font-size: 0.875rem;">
+          Generiere Fachartikel aus MDN, W3C und anderen offiziellen Dokumentationen.
+        </p>
+      </div>
+      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
+        <h3 style="margin-bottom: 0.5rem;">🇩🇪 Deutsche Texte</h3>
+        <p style="color: #94a3b8; font-size: 0.875rem;">
+          Professionelle deutsche Fachartikel für Content-Marketing-Professionals.
+        </p>
+      </div>
+      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
+        <h3 style="margin-bottom: 0.5rem;">⚡ SEO-optimiert</h3>
+        <p style="color: #94a3b8; font-size: 0.875rem;">
+          Automatische SEO-Optimierung mit Titel, Beschreibung und Tags.
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>
