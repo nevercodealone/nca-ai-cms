@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
         filepath: article.filepath,
         tags: article.tags,
         source: article.source,
-        date: article.date.toISOString().split('T')[0],
+        date: article.date.toISOString(),
       }),
       {
         status: 200,
