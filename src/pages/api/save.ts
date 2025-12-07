@@ -13,6 +13,8 @@ export const POST: APIRoute = async ({ request }) => {
       date: new Date(data.date || Date.now()),
       tags: data.tags || [],
       source: data.source,
+      image: data.image,
+      imageAlt: data.imageAlt,
     });
 
     const writer = new FileWriter();

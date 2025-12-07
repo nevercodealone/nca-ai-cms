@@ -15,6 +15,22 @@ export interface ContentGeneratorConfig {
   model?: string;
 }
 
+const CONTACT_URL =
+  'https://nevercodealone.de/de/landingpages/barrierefreies-webdesign';
+
+const CTAS = [
+  `Sie möchten Ihre Website barrierefrei gestalten? [Vereinbaren Sie jetzt ein kostenloses Erstgespräch](${CONTACT_URL}) mit unseren Accessibility-Experten.`,
+  `Brauchen Sie Unterstützung bei WCAG-Konformität? [Kontaktieren Sie Never Code Alone](${CONTACT_URL}) für eine professionelle Beratung.`,
+  `Maximieren Sie Ihre Reichweite durch barrierefreies Webdesign. [Jetzt unverbindlich anfragen](${CONTACT_URL}) und mehr erfahren.`,
+  `Inklusion beginnt digital. [Lassen Sie sich von unseren Experten beraten](${CONTACT_URL}) – kostenlos und unverbindlich.`,
+  `Performance, SEO und Barrierefreiheit in einem? [Sprechen Sie mit Never Code Alone](${CONTACT_URL}) über Ihre Möglichkeiten.`,
+  `Accessibility-Audit gefällig? [Fordern Sie jetzt Ihre kostenlose Erstberatung an](${CONTACT_URL}) und machen Sie Ihre Website zugänglich.`,
+  `Barrierefreies Webdesign ist kein Luxus, sondern Notwendigkeit. [Starten Sie jetzt mit Never Code Alone](${CONTACT_URL}).`,
+  `Sie wollen alle Nutzer erreichen? [Erfahren Sie mehr über barrierefreies Webdesign](${CONTACT_URL}) in einem persönlichen Gespräch.`,
+  `WCAG, BITV, Screenreader-Kompatibilität – wir helfen Ihnen. [Jetzt Kontakt aufnehmen](${CONTACT_URL}) für Ihr Accessibility-Projekt.`,
+  `Machen Sie Ihre digitale Präsenz inklusiv. [Buchen Sie ein kostenloses Beratungsgespräch](${CONTACT_URL}) bei Never Code Alone.`,
+];
+
 export class ContentGenerator {
   private client: GoogleGenerativeAI;
   private model: string;
@@ -61,6 +77,9 @@ export class ContentGenerator {
   }
 
   private buildSystemPrompt(): string {
+    const ctaIndex = new Date().getMinutes() % CTAS.length;
+    const cta = CTAS[ctaIndex];
+
     return `Du bist ein erfahrener technischer Content-Writer für Web-Entwicklung.
 Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
 
@@ -72,14 +91,24 @@ Regeln:
 - Mindestens 800 Wörter
 - Verwende praktische Codebeispiele
 - Strukturiere mit H2 und H3 Überschriften (## und ###)
-- Integriere am Ende einen Call-to-Action für professionelle Frontend-Beratung
 - Keine Plagiate - reformuliere die Quelle, kopiere nicht
 - WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
+- WICHTIG: Beende den Artikel mit genau diesem Call-to-Action:
+
+${cta}
 
 Antworte IMMER in diesem EXAKTEN Format mit den Markern:
 
 ---TITLE---
 SEO-optimierter Titel (max 60 Zeichen)
+WICHTIG für den Titel:
+- Das Hauptthema/Keyword MUSS im Titel vorkommen
+- Nutze Zahlen wenn möglich (z.B. "5 Tipps", "3 Fehler")
+- Zeige den Nutzen/Benefit (z.B. "So vermeidest du...", "Warum X wichtig ist")
+- Wecke Neugier oder löse ein Problem
+- SCHLECHT: "Barrierefreies HTML: Das Fundament für Inklusion" (zu generisch)
+- GUT: "CAPTCHA barrierefrei gestalten: 5 Alternativen die funktionieren"
+- GUT: "Warum barrierefreie Formulare mehr Conversions bringen"
 ---DESCRIPTION---
 Meta-Description (max 155 Zeichen)
 ---TAGS---
