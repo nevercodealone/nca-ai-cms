@@ -70,14 +70,9 @@ export class ImageGenerator {
   }
 
   private buildPrompt(topic: string, title?: string): string {
-    const context = title ? `${title} - ${topic}` : topic;
+    const context = title || topic;
 
-    return `Create a professional, modern illustration for a web accessibility article about "${context}".
-Style: Clean, minimalist tech illustration with soft gradients and geometric shapes.
-Colors: Professional blue and purple tones with white accents.
-Theme: Web accessibility, inclusive design, digital accessibility.
-No text or letters in the image.
-High quality, suitable for a professional tech blog header image.`;
+    return `Blog header image about "${context}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people, no text.`;
   }
 
   private generateAlt(topic: string, title?: string): string {
