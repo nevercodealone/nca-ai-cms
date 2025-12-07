@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
-const SOURCE_URL = 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML';
+const SOURCE_URL =
+  'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML';
 
 const TOPICS = [
   'Audio-Only or Video-Only',
@@ -34,22 +35,36 @@ interface GeneratedArticle {
   filepath: string;
 }
 
+interface GeneratedImage {
+  url: string;
+  alt: string;
+  filepath: string;
+}
+
 export default function Editor() {
   const [topic, setTopic] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [article, setArticle] = useState<GeneratedArticle | null>(null);
-  const [saved, setSaved] = useState(false);
 
-  const handleGenerate = async () => {
+  // Text state
+  const [article, setArticle] = useState<GeneratedArticle | null>(null);
+  const [textLoading, setTextLoading] = useState(false);
+  const [textSaved, setTextSaved] = useState(false);
+
+  // Image state
+  const [image, setImage] = useState<GeneratedImage | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageSaved, setImageSaved] = useState(false);
+
+  // Text handlers
+  const handleGenerateText = async () => {
     if (!topic) {
       setError('Bitte wähle ein Thema aus');
       return;
     }
 
-    setLoading(true);
+    setTextLoading(true);
     setError(null);
-    setSaved(false);
+    setTextSaved(false);
 
     try {
       const response = await fetch('/api/generate', {
@@ -60,22 +75,22 @@ export default function Editor() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Generation failed');
+        throw new Error(data.error || 'Text generation failed');
       }
 
       const data = await response.json();
       setArticle(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      setError(err instanceof Error ? err.message : 'Text generation failed');
     } finally {
-      setLoading(false);
+      setTextLoading(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveText = async () => {
     if (!article) return;
 
-    setLoading(true);
+    setTextLoading(true);
     setError(null);
 
     try {
@@ -90,11 +105,69 @@ export default function Editor() {
         throw new Error(data.error || 'Save failed');
       }
 
-      setSaved(true);
+      setTextSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
-      setLoading(false);
+      setTextLoading(false);
+    }
+  };
+
+  // Image handlers
+  const handleGenerateImage = async () => {
+    if (!topic) {
+      setError('Bitte wähle ein Thema aus');
+      return;
+    }
+
+    setImageLoading(true);
+    setError(null);
+    setImageSaved(false);
+
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, title: article?.title }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Image generation failed');
+      }
+
+      const data = await response.json();
+      setImage(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image generation failed');
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleSaveImage = async () => {
+    if (!image) return;
+
+    setImageLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(image),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Image save failed');
+      }
+
+      setImageSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image save failed');
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -112,70 +185,129 @@ export default function Editor() {
           >
             <option value="">-- Thema wählen --</option>
             {TOPICS.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </select>
         </div>
 
-        <div style={styles.actions}>
-          <button
-            onClick={handleGenerate}
-            disabled={loading || !topic}
-            style={{
-              ...styles.button,
-              ...styles.primaryButton,
-              opacity: loading || !topic ? 0.5 : 1,
-            }}
-          >
-            {loading ? 'Generiere...' : 'Generieren'}
-          </button>
-
-          {article && (
-            <>
-              <button
-                onClick={handleGenerate}
-                disabled={loading}
-                style={styles.button}
-              >
-                Neu generieren
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading || saved}
-                style={{
-                  ...styles.button,
-                  ...styles.successButton,
-                  opacity: saved ? 0.5 : 1,
-                }}
-              >
-                {saved ? '✓ Gespeichert' : 'Speichern'}
-              </button>
-            </>
-          )}
+        {/* Text Section */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>📄 Text</h3>
+          <div style={styles.actions}>
+            <button
+              onClick={handleGenerateText}
+              disabled={textLoading || !topic}
+              style={{
+                ...styles.button,
+                ...styles.primaryButton,
+                opacity: textLoading || !topic ? 0.5 : 1,
+              }}
+            >
+              {textLoading ? 'Generiere...' : 'Generieren'}
+            </button>
+            <button
+              onClick={handleGenerateText}
+              disabled={textLoading || !article}
+              style={{
+                ...styles.button,
+                opacity: textLoading || !article ? 0.5 : 1,
+              }}
+            >
+              Neu generieren
+            </button>
+            <button
+              onClick={handleSaveText}
+              disabled={textLoading || !article || textSaved}
+              style={{
+                ...styles.button,
+                ...styles.successButton,
+                opacity: textLoading || !article || textSaved ? 0.5 : 1,
+              }}
+            >
+              {textSaved ? '✓ Gespeichert' : 'Speichern'}
+            </button>
+          </div>
         </div>
 
-        {error && (
-          <div style={styles.error}>{error}</div>
-        )}
+        {/* Image Section */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>🖼️ Bild</h3>
+          <div style={styles.actions}>
+            <button
+              onClick={handleGenerateImage}
+              disabled={imageLoading || !topic}
+              style={{
+                ...styles.button,
+                ...styles.primaryButton,
+                opacity: imageLoading || !topic ? 0.5 : 1,
+              }}
+            >
+              {imageLoading ? 'Generiere...' : 'Generieren'}
+            </button>
+            <button
+              onClick={handleGenerateImage}
+              disabled={imageLoading || !image}
+              style={{
+                ...styles.button,
+                opacity: imageLoading || !image ? 0.5 : 1,
+              }}
+            >
+              Neu generieren
+            </button>
+            <button
+              onClick={handleSaveImage}
+              disabled={imageLoading || !image || imageSaved}
+              style={{
+                ...styles.button,
+                ...styles.successButton,
+                opacity: imageLoading || !image || imageSaved ? 0.5 : 1,
+              }}
+            >
+              {imageSaved ? '✓ Gespeichert' : 'Speichern'}
+            </button>
+          </div>
+        </div>
+
+        {error && <div style={styles.error}>{error}</div>}
       </div>
 
-      {article && (
-        <div style={styles.preview}>
-          <div style={styles.previewHeader}>
-            <h3 style={styles.previewTitle}>Vorschau</h3>
-            <span style={styles.filepath}>{article.filepath}</span>
+      {/* Preview Area */}
+      <div style={styles.previewArea}>
+        {article && (
+          <div style={styles.preview}>
+            <div style={styles.previewHeader}>
+              <h3 style={styles.previewTitle}>📄 Text Vorschau</h3>
+              <span style={styles.filepath}>{article.filepath}</span>
+            </div>
+            <div style={styles.frontmatter}>
+              <div>
+                <strong>Titel:</strong> {article.title}
+              </div>
+              <div>
+                <strong>Beschreibung:</strong> {article.description}
+              </div>
+            </div>
+            <div style={styles.content}>
+              <pre style={styles.markdown}>{article.content}</pre>
+            </div>
           </div>
+        )}
 
-          <div style={styles.frontmatter}>
-            <div><strong>Titel:</strong> {article.title}</div>
-            <div><strong>Beschreibung:</strong> {article.description}</div>
+        {image && (
+          <div style={styles.preview}>
+            <div style={styles.previewHeader}>
+              <h3 style={styles.previewTitle}>🖼️ Bild Vorschau</h3>
+              <span style={styles.filepath}>{image.filepath}</span>
+            </div>
+            <div style={styles.imagePreview}>
+              <img src={image.url} alt={image.alt} style={styles.image} />
+              <p style={styles.imageAlt}>{image.alt}</p>
+            </div>
           </div>
-
-          <div style={styles.content}>
-            <pre style={styles.markdown}>{article.content}</pre>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -197,7 +329,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '1.5rem',
   },
   field: {
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
   },
   label: {
     display: 'block',
@@ -214,20 +346,30 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#f1f5f9',
     fontSize: '1rem',
   },
+  section: {
+    marginBottom: '1.5rem',
+    padding: '1rem',
+    background: '#0f172a',
+    borderRadius: '6px',
+  },
+  sectionTitle: {
+    fontSize: '1rem',
+    marginBottom: '0.75rem',
+    color: '#e2e8f0',
+  },
   actions: {
     display: 'flex',
     gap: '0.5rem',
-    marginTop: '1.5rem',
     flexWrap: 'wrap',
   },
   button: {
-    padding: '0.75rem 1rem',
+    padding: '0.5rem 0.75rem',
     background: '#334155',
     border: 'none',
     borderRadius: '4px',
     color: '#f1f5f9',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: '0.8rem',
   },
   primaryButton: {
     background: '#3b82f6',
@@ -241,6 +383,11 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#7f1d1d',
     borderRadius: '4px',
     color: '#fecaca',
+  },
+  previewArea: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
   preview: {
     background: '#1e293b',
@@ -273,7 +420,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   content: {
     padding: '1.5rem',
-    maxHeight: '600px',
+    maxHeight: '400px',
     overflow: 'auto',
   },
   markdown: {
@@ -282,5 +429,19 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'pre-wrap',
     margin: 0,
     color: '#e2e8f0',
+  },
+  imagePreview: {
+    padding: '1.5rem',
+    textAlign: 'center',
+  },
+  image: {
+    maxWidth: '100%',
+    maxHeight: '300px',
+    borderRadius: '4px',
+  },
+  imageAlt: {
+    marginTop: '0.5rem',
+    color: '#94a3b8',
+    fontSize: '0.875rem',
   },
 };
