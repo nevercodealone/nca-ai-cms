@@ -1,0 +1,150 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Redirect if already logged in
+const authCookie = Astro.cookies.get('editor-auth');
+if (authCookie?.value) {
+  const expectedToken = Buffer.from(
+    `${import.meta.env.EDITOR_ADMIN}:${import.meta.env.EDITOR_PASSWORD}`
+  ).toString('base64');
+  if (authCookie.value === expectedToken) {
+    return Astro.redirect('/editor');
+  }
+}
+---
+
+<Layout title="Login">
+  <div class="container">
+    <div class="login-wrapper">
+      <div class="login-box">
+        <h1>Editor Login</h1>
+        <form id="login-form">
+          <div class="field">
+            <label for="username">Benutzername</label>
+            <input type="text" id="username" name="username" required autocomplete="username" />
+          </div>
+          <div class="field">
+            <label for="password">Passwort</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password" />
+          </div>
+          <div id="error" class="error"></div>
+          <button type="submit">Anmelden</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+  }
+
+  .login-box {
+    background: var(--color-surface);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-size: 1rem;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .error {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    min-height: 1.25rem;
+  }
+
+  button {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--color-primary);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  button:hover {
+    background: var(--color-primary-hover);
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const errorEl = document.getElementById('error') as HTMLDivElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const formData = new FormData(form);
+    const username = formData.get('username');
+    const password = formData.get('password');
+
+    const button = form.querySelector('button') as HTMLButtonElement;
+    button.disabled = true;
+    button.textContent = 'Anmelden...';
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Login fehlgeschlagen');
+      }
+
+      window.location.href = '/editor';
+    } catch (err) {
+      errorEl.textContent = err instanceof Error ? err.message : 'Login fehlgeschlagen';
+      button.disabled = false;
+      button.textContent = 'Anmelden';
+    }
+  });
+</script>

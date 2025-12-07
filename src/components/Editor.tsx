@@ -94,10 +94,16 @@ export default function Editor() {
     setError(null);
 
     try {
+      const articleData = {
+        ...article,
+        image: image ? image.filepath.replace('public', '') : undefined,
+        imageAlt: image ? image.alt : undefined,
+      };
+
       const response = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(article),
+        body: JSON.stringify(articleData),
       });
 
       if (!response.ok) {
@@ -111,6 +117,12 @@ export default function Editor() {
     } finally {
       setTextLoading(false);
     }
+  };
+
+  // Logout handler
+  const handleLogout = async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
   };
 
   // Image handlers
@@ -174,7 +186,12 @@ export default function Editor() {
   return (
     <div style={styles.container}>
       <div style={styles.panel}>
-        <h2 style={styles.heading}>Content Generator</h2>
+        <div style={styles.headerRow}>
+          <h2 style={styles.heading}>Content Generator</h2>
+          <button onClick={handleLogout} style={styles.logoutButton}>
+            Logout
+          </button>
+        </div>
 
         <div style={styles.field}>
           <label style={styles.label}>Thema auswählen</label>
@@ -328,9 +345,24 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1.5rem',
     height: 'fit-content',
   },
+  headerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+  },
   heading: {
     fontSize: '1.25rem',
-    marginBottom: '1.5rem',
+    margin: 0,
+  },
+  logoutButton: {
+    padding: '0.4rem 0.75rem',
+    background: 'transparent',
+    border: '1px solid #475569',
+    borderRadius: '4px',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
   },
   field: {
     marginBottom: '1.5rem',
