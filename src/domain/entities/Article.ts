@@ -68,6 +68,7 @@ export class Article {
       title: this.title,
       description: this.description,
       date: this.date.toISOString().split('T')[0],
+      createdAt: this.date.toISOString(),
       tags: this.tags,
       source: this.source,
       ...(this.image && { image: this.image }),

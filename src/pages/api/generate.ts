@@ -33,8 +33,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(
       JSON.stringify({
-        title: article.seoMetadata.title,
-        description: article.seoMetadata.description,
+        title: article.title,
+        description: article.description,
         content: article.content,
         filepath: article.filepath,
         tags: article.tags,

@@ -44,144 +44,168 @@ interface GeneratedImage {
 export default function Editor() {
   const [topic, setTopic] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  // Text state
   const [article, setArticle] = useState<GeneratedArticle | null>(null);
-  const [textLoading, setTextLoading] = useState(false);
-  const [textSaved, setTextSaved] = useState(false);
-
-  // Image state
   const [image, setImage] = useState<GeneratedImage | null>(null);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [imageSaved, setImageSaved] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [regeneratingText, setRegeneratingText] = useState(false);
+  const [regeneratingImage, setRegeneratingImage] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
 
-  // Text handlers
-  const handleGenerateText = async () => {
-    if (!topic) {
-      setError('Bitte wähle ein Thema aus');
-      return;
+  const handleTopicChange = (newTopic: string) => {
+    setTopic(newTopic);
+    setArticle(null);
+    setImage(null);
+    setPublished(false);
+    setError(null);
+  };
+
+  const generateText = async (): Promise<GeneratedArticle | null> => {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: SOURCE_URL, topic }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Text generation failed');
     }
 
-    setTextLoading(true);
+    return response.json();
+  };
+
+  const generateImage = async (title?: string): Promise<GeneratedImage | null> => {
+    const response = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, title }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Image generation failed');
+    }
+
+    return response.json();
+  };
+
+  const handleGenerateAll = async () => {
+    if (!topic) return;
+
+    setGenerating(true);
     setError(null);
-    setTextSaved(false);
+    setArticle(null);
+    setImage(null);
 
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: SOURCE_URL, topic }),
-      });
+      // Generate both in parallel
+      const [textData, imageData] = await Promise.all([
+        generateText(),
+        generateImage(),
+      ]);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Text generation failed');
-      }
+      setArticle(textData);
+      setImage(imageData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Generation failed');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
-      const data = await response.json();
+  const handleRegenerateText = async () => {
+    if (!topic) return;
+
+    setRegeneratingText(true);
+    setError(null);
+
+    try {
+      const data = await generateText();
       setArticle(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Text generation failed');
     } finally {
-      setTextLoading(false);
+      setRegeneratingText(false);
     }
   };
 
-  const handleSaveText = async () => {
-    if (!article) return;
+  const handleRegenerateImage = async () => {
+    if (!topic) return;
 
-    setTextLoading(true);
+    setRegeneratingImage(true);
     setError(null);
 
     try {
-      const articleData = {
-        ...article,
-        image: image ? image.filepath.replace('public', '') : undefined,
-        imageAlt: image ? image.alt : undefined,
-      };
-
-      const response = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(articleData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Save failed');
-      }
-
-      setTextSaved(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setTextLoading(false);
-    }
-  };
-
-  // Logout handler
-  const handleLogout = async () => {
-    await fetch('/api/logout', { method: 'POST' });
-    window.location.href = '/login';
-  };
-
-  // Image handlers
-  const handleGenerateImage = async () => {
-    if (!topic) {
-      setError('Bitte wähle ein Thema aus');
-      return;
-    }
-
-    setImageLoading(true);
-    setError(null);
-    setImageSaved(false);
-
-    try {
-      const response = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, title: article?.title }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Image generation failed');
-      }
-
-      const data = await response.json();
+      const data = await generateImage(article?.title);
       setImage(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Image generation failed');
     } finally {
-      setImageLoading(false);
+      setRegeneratingImage(false);
     }
   };
 
-  const handleSaveImage = async () => {
-    if (!image) return;
+  const handlePublish = async () => {
+    if (!article || !image) return;
 
-    setImageLoading(true);
+    setPublishing(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/save-image', {
+      // 1. Save image first
+      const imageResponse = await fetch('/api/save-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(image),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
+      if (!imageResponse.ok) {
+        const data = await imageResponse.json();
         throw new Error(data.error || 'Image save failed');
       }
 
-      setImageSaved(true);
+      // 2. Save article with image reference
+      const articleData = {
+        ...article,
+        image: image.filepath.replace('public', ''),
+        imageAlt: image.alt,
+      };
+
+      const articleResponse = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData),
+      });
+
+      if (!articleResponse.ok) {
+        const data = await articleResponse.json();
+        throw new Error(data.error || 'Article save failed');
+      }
+
+      setPublished(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Image save failed');
+      setError(err instanceof Error ? err.message : 'Publish failed');
     } finally {
-      setImageLoading(false);
+      setPublishing(false);
     }
   };
+
+  const handleCreateNew = () => {
+    setTopic('');
+    setArticle(null);
+    setImage(null);
+    setPublished(false);
+    setError(null);
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
+  const hasContent = article && image;
+  const isLoading = generating || regeneratingText || regeneratingImage || publishing;
 
   return (
     <div style={styles.container}>
@@ -193,113 +217,120 @@ export default function Editor() {
           </button>
         </div>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Thema auswählen</label>
-          <select
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">-- Thema wählen --</option>
-            {TOPICS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {topic && (
+        {/* Published State */}
+        {published ? (
+          <div style={styles.successBox}>
+            <div style={styles.successIcon}>✓</div>
+            <h3 style={styles.successTitle}>Artikel veröffentlicht!</h3>
+            <p style={styles.successPath}>{article?.filepath}</p>
+            <button onClick={handleCreateNew} style={styles.newButton}>
+              Neuen Artikel erstellen
+            </button>
+          </div>
+        ) : (
           <>
-            {/* Text Section */}
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>📄 Text</h3>
-              <div style={styles.actions}>
-                <button
-                  onClick={handleGenerateText}
-                  disabled={textLoading}
-                  style={{
-                    ...styles.button,
-                    ...styles.primaryButton,
-                    opacity: textLoading ? 0.5 : 1,
-                  }}
-                >
-                  {textLoading ? 'Generiere...' : 'Generieren'}
-                </button>
-                <button
-                  onClick={handleGenerateText}
-                  disabled={textLoading || !article}
-                  style={{
-                    ...styles.button,
-                    opacity: textLoading || !article ? 0.5 : 1,
-                  }}
-                >
-                  Neu generieren
-                </button>
-                <button
-                  onClick={handleSaveText}
-                  disabled={textLoading || !article || textSaved}
-                  style={{
-                    ...styles.button,
-                    ...styles.successButton,
-                    opacity: textLoading || !article || textSaved ? 0.5 : 1,
-                  }}
-                >
-                  {textSaved ? '✓ Gespeichert' : 'Speichern'}
-                </button>
-              </div>
+            {/* Topic Selection */}
+            <div style={styles.field}>
+              <label style={styles.label}>Thema auswählen</label>
+              <select
+                value={topic}
+                onChange={(e) => handleTopicChange(e.target.value)}
+                style={styles.select}
+                disabled={isLoading}
+              >
+                <option value="">-- Thema wählen --</option>
+                {TOPICS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Image Section */}
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>🖼️ Bild</h3>
-              <div style={styles.actions}>
+            {/* Generate Button - before content exists */}
+            {topic && !hasContent && (
+              <button
+                onClick={handleGenerateAll}
+                disabled={generating}
+                style={{
+                  ...styles.button,
+                  ...styles.generateButton,
+                  opacity: generating ? 0.5 : 1,
+                }}
+              >
+                {generating ? 'Generiere Bild & Text...' : 'Generieren'}
+              </button>
+            )}
+
+            {/* After content generated: Regenerate + Publish */}
+            {hasContent && (
+              <div style={styles.actionSection}>
+                <div style={styles.regenerateRow}>
+                  <button
+                    onClick={handleRegenerateImage}
+                    disabled={isLoading}
+                    style={{
+                      ...styles.button,
+                      ...styles.secondaryButton,
+                      opacity: isLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {regeneratingImage ? 'Generiere...' : '🖼️ Bild neu'}
+                  </button>
+                  <button
+                    onClick={handleRegenerateText}
+                    disabled={isLoading}
+                    style={{
+                      ...styles.button,
+                      ...styles.secondaryButton,
+                      opacity: isLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {regeneratingText ? 'Generiere...' : '📄 Text neu'}
+                  </button>
+                </div>
                 <button
-                  onClick={handleGenerateImage}
-                  disabled={imageLoading}
+                  onClick={handlePublish}
+                  disabled={publishing}
                   style={{
                     ...styles.button,
-                    ...styles.primaryButton,
-                    opacity: imageLoading ? 0.5 : 1,
+                    ...styles.publishButton,
+                    opacity: publishing ? 0.5 : 1,
                   }}
                 >
-                  {imageLoading ? 'Generiere...' : 'Generieren'}
-                </button>
-                <button
-                  onClick={handleGenerateImage}
-                  disabled={imageLoading || !image}
-                  style={{
-                    ...styles.button,
-                    opacity: imageLoading || !image ? 0.5 : 1,
-                  }}
-                >
-                  Neu generieren
-                </button>
-                <button
-                  onClick={handleSaveImage}
-                  disabled={imageLoading || !image || imageSaved}
-                  style={{
-                    ...styles.button,
-                    ...styles.successButton,
-                    opacity: imageLoading || !image || imageSaved ? 0.5 : 1,
-                  }}
-                >
-                  {imageSaved ? '✓ Gespeichert' : 'Speichern'}
+                  {publishing ? 'Veröffentliche...' : 'Veröffentlichen'}
                 </button>
               </div>
-            </div>
+            )}
           </>
         )}
 
         {error && <div style={styles.error}>{error}</div>}
       </div>
 
-      {/* Preview Area */}
+      {/* Preview Area - Image first, then Text */}
       <div style={styles.previewArea}>
-        {article && (
-          <div style={styles.preview}>
+        {image && (
+          <div style={{ ...styles.preview, ...(published ? styles.publishedPreview : {}) }}>
             <div style={styles.previewHeader}>
-              <h3 style={styles.previewTitle}>📄 Text Vorschau</h3>
+              <h3 style={styles.previewTitle}>
+                🖼️ Bild {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
+              </h3>
+              <span style={styles.filepath}>{image.filepath}</span>
+            </div>
+            <div style={styles.imagePreview}>
+              <img src={image.url} alt={image.alt} style={styles.image} />
+              <p style={styles.imageAlt}>{image.alt}</p>
+            </div>
+          </div>
+        )}
+
+        {article && (
+          <div style={{ ...styles.preview, ...(published ? styles.publishedPreview : {}) }}>
+            <div style={styles.previewHeader}>
+              <h3 style={styles.previewTitle}>
+                📄 Text {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
+              </h3>
               <span style={styles.filepath}>{article.filepath}</span>
             </div>
             <div style={styles.frontmatter}>
@@ -315,19 +346,6 @@ export default function Editor() {
             </div>
           </div>
         )}
-
-        {image && (
-          <div style={styles.preview}>
-            <div style={styles.previewHeader}>
-              <h3 style={styles.previewTitle}>🖼️ Bild Vorschau</h3>
-              <span style={styles.filepath}>{image.filepath}</span>
-            </div>
-            <div style={styles.imagePreview}>
-              <img src={image.url} alt={image.alt} style={styles.image} />
-              <p style={styles.imageAlt}>{image.alt}</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -337,7 +355,7 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'grid',
     gap: '2rem',
-    gridTemplateColumns: '400px 1fr',
+    gridTemplateColumns: '350px 1fr',
   },
   panel: {
     background: '#1e293b',
@@ -365,7 +383,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.8rem',
   },
   field: {
-    marginBottom: '1.5rem',
+    marginBottom: '1rem',
   },
   label: {
     display: 'block',
@@ -382,36 +400,69 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#f1f5f9',
     fontSize: '1rem',
   },
-  section: {
-    marginBottom: '1.5rem',
-    padding: '1rem',
-    background: '#0f172a',
-    borderRadius: '6px',
-  },
-  sectionTitle: {
-    fontSize: '1rem',
-    marginBottom: '0.75rem',
-    color: '#e2e8f0',
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
   button: {
-    padding: '0.5rem 0.75rem',
+    padding: '0.75rem 1rem',
     background: '#334155',
     border: 'none',
     borderRadius: '4px',
     color: '#f1f5f9',
     cursor: 'pointer',
-    fontSize: '0.8rem',
+    fontSize: '0.9rem',
   },
-  primaryButton: {
+  generateButton: {
     background: '#3b82f6',
+    width: '100%',
+    padding: '1rem',
+    fontSize: '1rem',
+    fontWeight: 'bold',
   },
-  successButton: {
+  actionSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
+  regenerateRow: {
+    display: 'flex',
+    gap: '0.5rem',
+  },
+  secondaryButton: {
+    background: '#475569',
+    flex: 1,
+  },
+  publishButton: {
     background: '#22c55e',
+    width: '100%',
+    padding: '1rem',
+    fontSize: '1rem',
+    fontWeight: 'bold',
+  },
+  successBox: {
+    textAlign: 'center',
+    padding: '2rem 1rem',
+  },
+  successIcon: {
+    fontSize: '3rem',
+    color: '#22c55e',
+    marginBottom: '1rem',
+  },
+  successTitle: {
+    fontSize: '1.25rem',
+    marginBottom: '0.5rem',
+  },
+  successPath: {
+    color: '#94a3b8',
+    fontSize: '0.875rem',
+    fontFamily: 'monospace',
+    marginBottom: '1.5rem',
+  },
+  newButton: {
+    padding: '0.75rem 1.5rem',
+    background: '#3b82f6',
+    border: 'none',
+    borderRadius: '4px',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '1rem',
   },
   error: {
     marginTop: '1rem',
@@ -430,6 +481,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     overflow: 'hidden',
   },
+  publishedPreview: {
+    border: '2px solid #22c55e',
+  },
   previewHeader: {
     padding: '1rem 1.5rem',
     borderBottom: '1px solid #334155',
@@ -440,6 +494,17 @@ const styles: Record<string, React.CSSProperties> = {
   previewTitle: {
     fontSize: '1rem',
     margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  publishedBadge: {
+    background: '#22c55e',
+    color: '#fff',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    fontSize: '0.7rem',
+    fontWeight: 'normal',
   },
   filepath: {
     color: '#94a3b8',
