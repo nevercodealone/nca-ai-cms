@@ -1,5 +1,6 @@
 # build output
 dist/
+
 # generated types
 .astro/
 
@@ -11,7 +12,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
 
 # environment variables
 .env
@@ -26,3 +26,11 @@ coverage/
 
 # jetbrains setting folder
 .idea/
+
+# generated content
+src/content/articles/**/*.md
+!src/content/articles/.gitignore
+
+# generated images
+public/images/*
+!public/images/.gitignore
