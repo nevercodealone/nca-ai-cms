@@ -192,83 +192,87 @@ export default function Editor() {
           </select>
         </div>
 
-        {/* Text Section */}
-        <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>📄 Text</h3>
-          <div style={styles.actions}>
-            <button
-              onClick={handleGenerateText}
-              disabled={textLoading || !topic}
-              style={{
-                ...styles.button,
-                ...styles.primaryButton,
-                opacity: textLoading || !topic ? 0.5 : 1,
-              }}
-            >
-              {textLoading ? 'Generiere...' : 'Generieren'}
-            </button>
-            <button
-              onClick={handleGenerateText}
-              disabled={textLoading || !article}
-              style={{
-                ...styles.button,
-                opacity: textLoading || !article ? 0.5 : 1,
-              }}
-            >
-              Neu generieren
-            </button>
-            <button
-              onClick={handleSaveText}
-              disabled={textLoading || !article || textSaved}
-              style={{
-                ...styles.button,
-                ...styles.successButton,
-                opacity: textLoading || !article || textSaved ? 0.5 : 1,
-              }}
-            >
-              {textSaved ? '✓ Gespeichert' : 'Speichern'}
-            </button>
-          </div>
-        </div>
+        {topic && (
+          <>
+            {/* Text Section */}
+            <div style={styles.section}>
+              <h3 style={styles.sectionTitle}>📄 Text</h3>
+              <div style={styles.actions}>
+                <button
+                  onClick={handleGenerateText}
+                  disabled={textLoading}
+                  style={{
+                    ...styles.button,
+                    ...styles.primaryButton,
+                    opacity: textLoading ? 0.5 : 1,
+                  }}
+                >
+                  {textLoading ? 'Generiere...' : 'Generieren'}
+                </button>
+                <button
+                  onClick={handleGenerateText}
+                  disabled={textLoading || !article}
+                  style={{
+                    ...styles.button,
+                    opacity: textLoading || !article ? 0.5 : 1,
+                  }}
+                >
+                  Neu generieren
+                </button>
+                <button
+                  onClick={handleSaveText}
+                  disabled={textLoading || !article || textSaved}
+                  style={{
+                    ...styles.button,
+                    ...styles.successButton,
+                    opacity: textLoading || !article || textSaved ? 0.5 : 1,
+                  }}
+                >
+                  {textSaved ? '✓ Gespeichert' : 'Speichern'}
+                </button>
+              </div>
+            </div>
 
-        {/* Image Section */}
-        <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>🖼️ Bild</h3>
-          <div style={styles.actions}>
-            <button
-              onClick={handleGenerateImage}
-              disabled={imageLoading || !topic}
-              style={{
-                ...styles.button,
-                ...styles.primaryButton,
-                opacity: imageLoading || !topic ? 0.5 : 1,
-              }}
-            >
-              {imageLoading ? 'Generiere...' : 'Generieren'}
-            </button>
-            <button
-              onClick={handleGenerateImage}
-              disabled={imageLoading || !image}
-              style={{
-                ...styles.button,
-                opacity: imageLoading || !image ? 0.5 : 1,
-              }}
-            >
-              Neu generieren
-            </button>
-            <button
-              onClick={handleSaveImage}
-              disabled={imageLoading || !image || imageSaved}
-              style={{
-                ...styles.button,
-                ...styles.successButton,
-                opacity: imageLoading || !image || imageSaved ? 0.5 : 1,
-              }}
-            >
-              {imageSaved ? '✓ Gespeichert' : 'Speichern'}
-            </button>
-          </div>
-        </div>
+            {/* Image Section */}
+            <div style={styles.section}>
+              <h3 style={styles.sectionTitle}>🖼️ Bild</h3>
+              <div style={styles.actions}>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={imageLoading}
+                  style={{
+                    ...styles.button,
+                    ...styles.primaryButton,
+                    opacity: imageLoading ? 0.5 : 1,
+                  }}
+                >
+                  {imageLoading ? 'Generiere...' : 'Generieren'}
+                </button>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={imageLoading || !image}
+                  style={{
+                    ...styles.button,
+                    opacity: imageLoading || !image ? 0.5 : 1,
+                  }}
+                >
+                  Neu generieren
+                </button>
+                <button
+                  onClick={handleSaveImage}
+                  disabled={imageLoading || !image || imageSaved}
+                  style={{
+                    ...styles.button,
+                    ...styles.successButton,
+                    opacity: imageLoading || !image || imageSaved ? 0.5 : 1,
+                  }}
+                >
+                  {imageSaved ? '✓ Gespeichert' : 'Speichern'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {error && <div style={styles.error}>{error}</div>}
       </div>
