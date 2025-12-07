@@ -27,12 +27,18 @@ export class Article {
   constructor(props: ArticleProps) {
     this.title = props.title;
     this.description = props.description;
-    this.content = props.content;
     this.date = props.date;
     this.tags = props.tags;
     this.source = props.source;
     this.slug = new Slug(props.title);
-    this.seoMetadata = SEOMetadata.truncate(props.title, props.description);
+    this.seoMetadata = new SEOMetadata(props.title, props.description);
+
+    // Prepend full title as H1 if it exceeds SEO limit
+    this.content =
+      props.title.length > SEOMetadata.MAX_TITLE_LENGTH
+        ? `# ${props.title}\n\n${props.content}`
+        : props.content;
+
     if (props.image !== undefined) {
       this.image = props.image;
     }
@@ -59,8 +65,8 @@ export class Article {
 
   toFrontmatter(): Record<string, unknown> {
     return {
-      title: this.seoMetadata.title,
-      description: this.seoMetadata.description,
+      title: this.title,
+      description: this.description,
       date: this.date.toISOString().split('T')[0],
       tags: this.tags,
       source: this.source,
