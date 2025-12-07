@@ -31,6 +31,8 @@ const CTAS = [
   `Machen Sie Ihre digitale Präsenz inklusiv. [Buchen Sie ein kostenloses Beratungsgespräch](${CONTACT_URL}) bei Never Code Alone.`,
 ];
 
+const CORE_TAGS = ['Semantik', 'HTML', 'Barrierefrei'];
+
 export class ContentGenerator {
   private client: GoogleGenerativeAI;
   private model: string;
@@ -93,6 +95,7 @@ Regeln:
 - Strukturiere mit H2 und H3 Überschriften (## und ###)
 - Keine Plagiate - reformuliere die Quelle, kopiere nicht
 - WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
+- WICHTIG: Integriere die Keywords "Semantik", "HTML" und "Barrierefrei" natürlich in den Text
 - WICHTIG: Beende den Artikel mit genau diesem Call-to-Action:
 
 ${cta}
@@ -159,10 +162,13 @@ ${fetched.content.slice(0, 8000)}`;
       const tagsRaw = extractSection('TAGS', 'CONTENT') || '';
       const content = extractSection('CONTENT') || '';
 
-      const tags = tagsRaw
+      const generatedTags = tagsRaw
         .split(',')
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
+
+      // Always include core tags, avoid duplicates
+      const tags = [...new Set([...CORE_TAGS, ...generatedTags])];
 
       return { title, description, content, tags };
     } catch (error) {
