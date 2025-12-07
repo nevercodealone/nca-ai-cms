@@ -1,47 +1,81 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
+
+const articles = await getCollection('articles');
+const sortedArticles = articles.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
 ---
 
 <Layout title="Home">
   <div class="container">
-    <div style="text-align: center; padding: 4rem 0;">
-      <h1 style="font-size: 3rem; margin-bottom: 1rem;">
-        NCA Content Marketing System
+    <div style="text-align: center; padding: 2rem 0;">
+      <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">
+        NCA Content Marketing
       </h1>
-      <p style="font-size: 1.25rem; color: #94a3b8; margin-bottom: 2rem;">
-        Automatisierte Fachartikel-Generierung für Web-Accessibility
+      <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 1.5rem;">
+        Fachartikel für Web-Accessibility
       </p>
       <a
         href="/editor"
-        style="display: inline-block; padding: 1rem 2rem; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;"
+        style="display: inline-block; padding: 0.75rem 1.5rem; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;"
       >
-        Editor öffnen →
+        + Neuer Artikel
       </a>
     </div>
 
-    <div
-      style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 4rem;"
-    >
-      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
-        <h3 style="margin-bottom: 0.5rem;">📄 Content aus Quellen</h3>
-        <p style="color: #94a3b8; font-size: 0.875rem;">
-          Generiere Fachartikel aus MDN, W3C und anderen offiziellen
-          Dokumentationen.
-        </p>
-      </div>
-      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
-        <h3 style="margin-bottom: 0.5rem;">🇩🇪 Deutsche Texte</h3>
-        <p style="color: #94a3b8; font-size: 0.875rem;">
-          Professionelle deutsche Fachartikel für
-          Content-Marketing-Professionals.
-        </p>
-      </div>
-      <div style="background: #1e293b; padding: 1.5rem; border-radius: 8px;">
-        <h3 style="margin-bottom: 0.5rem;">⚡ SEO-optimiert</h3>
-        <p style="color: #94a3b8; font-size: 0.875rem;">
-          Automatische SEO-Optimierung mit Titel, Beschreibung und Tags.
-        </p>
-      </div>
-    </div>
+    {
+      sortedArticles.length > 0 ? (
+        <div style="margin-top: 2rem;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">
+            Artikel ({sortedArticles.length})
+          </h2>
+          <div style="display: grid; gap: 1.5rem;">
+            {sortedArticles.map((article) => (
+              <a
+                href={`/articles/${article.id}`}
+                style="text-decoration: none; color: inherit;"
+              >
+                <article style="background: #1e293b; border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
+                  {article.data.image ? (
+                    <img
+                      src={article.data.image}
+                      alt={article.data.imageAlt || article.data.title}
+                      style="width: 200px; height: 140px; object-fit: cover;"
+                    />
+                  ) : (
+                    <div style="width: 200px; height: 140px; background: #334155; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                      Kein Bild
+                    </div>
+                  )}
+                  <div style="padding: 1rem 1rem 1rem 0;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+                      {article.data.title}
+                    </h3>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.75rem; line-height: 1.5;">
+                      {article.data.description}
+                    </p>
+                    <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: #64748b;">
+                      <span>
+                        {article.data.date.toLocaleDateString('de-DE')}
+                      </span>
+                      <span>{article.data.tags.slice(0, 3).join(', ')}</span>
+                    </div>
+                  </div>
+                </article>
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style="text-align: center; padding: 3rem; background: #1e293b; border-radius: 8px; margin-top: 2rem;">
+          <p style="color: #94a3b8;">Noch keine Artikel vorhanden.</p>
+          <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
+            Erstelle deinen ersten Artikel im Editor.
+          </p>
+        </div>
+      )
+    }
   </div>
 </Layout>
