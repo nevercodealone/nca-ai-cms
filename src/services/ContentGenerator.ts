@@ -71,9 +71,10 @@ Regeln:
 - Schreibe auf Deutsch
 - Mindestens 800 Wörter
 - Verwende praktische Codebeispiele
-- Strukturiere mit H2 und H3 Überschriften
+- Strukturiere mit H2 und H3 Überschriften (## und ###)
 - Integriere am Ende einen Call-to-Action für professionelle Frontend-Beratung
 - Keine Plagiate - reformuliere die Quelle, kopiere nicht
+- WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
 
 Antworte IMMER in diesem EXAKTEN Format mit den Markern:
 
