@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import sharp from 'sharp';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -33,8 +34,13 @@ export const POST: APIRoute = async ({ request }) => {
     const dir = path.dirname(fullPath);
     await fs.mkdir(dir, { recursive: true });
 
-    // Write image file
-    await fs.writeFile(fullPath, imageBuffer);
+    // Convert to WebP with high quality compression
+    const webpBuffer = await sharp(imageBuffer)
+      .webp({ quality: 85, effort: 6 })
+      .toBuffer();
+
+    // Write optimized WebP file
+    await fs.writeFile(fullPath, webpBuffer);
 
     return new Response(
       JSON.stringify({
