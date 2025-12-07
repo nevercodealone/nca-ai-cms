@@ -10,12 +10,16 @@ describe('SEOMetadata', () => {
 
   it('throws error for title over 60 characters', () => {
     const longTitle = 'A'.repeat(61);
-    expect(() => new SEOMetadata(longTitle, 'desc')).toThrow('Title must be max 60 characters');
+    expect(() => new SEOMetadata(longTitle, 'desc')).toThrow(
+      'Title must be max 60 characters'
+    );
   });
 
   it('throws error for description over 155 characters', () => {
     const longDesc = 'A'.repeat(156);
-    expect(() => new SEOMetadata('title', longDesc)).toThrow('Description must be max 155 characters');
+    expect(() => new SEOMetadata('title', longDesc)).toThrow(
+      'Description must be max 155 characters'
+    );
   });
 
   it('accepts exactly 60 character title', () => {

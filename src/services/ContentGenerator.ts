@@ -43,7 +43,10 @@ export class ContentGenerator {
     return new Article(props);
   }
 
-  private async generateContent(fetched: FetchedContent, topic?: string): Promise<GeneratedContent> {
+  private async generateContent(
+    fetched: FetchedContent,
+    topic?: string
+  ): Promise<GeneratedContent> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(fetched, topic);
 
@@ -126,7 +129,10 @@ ${fetched.content.slice(0, 8000)}`;
       const tagsRaw = extractSection('TAGS', 'CONTENT') || '';
       const content = extractSection('CONTENT') || '';
 
-      const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      const tags = tagsRaw
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
 
       return { title, description, content, tags };
     } catch (error) {

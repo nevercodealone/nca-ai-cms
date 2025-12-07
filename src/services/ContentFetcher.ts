@@ -4,14 +4,14 @@ export type FetchedContent = {
   title: string;
   content: string;
   url: string;
-}
+};
 
 export class ContentFetcher {
   async fetch(source: Source): Promise<FetchedContent> {
     const response = await fetch(source.url, {
       headers: {
         'User-Agent': 'NCA-Content-Bot/1.0',
-        'Accept': 'text/html',
+        Accept: 'text/html',
       },
     });
 
@@ -32,7 +32,7 @@ export class ContentFetcher {
 
   private extractTitle(html: string): string {
     const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return match ? match[1].trim() : 'Untitled';
+    return match?.[1]?.trim() ?? 'Untitled';
   }
 
   private extractMainContent(html: string): string {
@@ -45,11 +45,14 @@ export class ContentFetcher {
       .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
 
     // Try to find main content area
-    const mainMatch = content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
-                      content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-                      content.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    const mainMatch =
+      content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
+      content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
+      content.match(
+        /<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i
+      );
 
-    if (mainMatch) {
+    if (mainMatch?.[1]) {
       content = mainMatch[1];
     }
 
@@ -59,8 +62,14 @@ export class ContentFetcher {
         const hashes = '#'.repeat(parseInt(level));
         return `\n${hashes} ${this.stripTags(text).trim()}\n`;
       })
-      .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_, text) => `\n${this.stripTags(text).trim()}\n`)
-      .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, text) => `- ${this.stripTags(text).trim()}`)
+      .replace(
+        /<p[^>]*>([\s\S]*?)<\/p>/gi,
+        (_, text) => `\n${this.stripTags(text).trim()}\n`
+      )
+      .replace(
+        /<li[^>]*>([\s\S]*?)<\/li>/gi,
+        (_, text) => `- ${this.stripTags(text).trim()}`
+      )
       .replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`')
       .replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, '\n```\n$1\n```\n')
       .replace(/<[^>]+>/g, '') // Remove remaining tags

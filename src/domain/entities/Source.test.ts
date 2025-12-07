@@ -3,17 +3,25 @@ import { Source } from './Source';
 
 describe('Source', () => {
   it('creates source from valid HTTPS URL', () => {
-    const source = new Source('https://developer.mozilla.org/en-US/docs/Web/HTML');
-    expect(source.url).toBe('https://developer.mozilla.org/en-US/docs/Web/HTML');
+    const source = new Source(
+      'https://developer.mozilla.org/en-US/docs/Web/HTML'
+    );
+    expect(source.url).toBe(
+      'https://developer.mozilla.org/en-US/docs/Web/HTML'
+    );
   });
 
   it('extracts domain from URL', () => {
-    const source = new Source('https://developer.mozilla.org/en-US/docs/Web/HTML');
+    const source = new Source(
+      'https://developer.mozilla.org/en-US/docs/Web/HTML'
+    );
     expect(source.domain).toBe('developer.mozilla.org');
   });
 
   it('throws error for HTTP URL', () => {
-    expect(() => new Source('http://example.com')).toThrow('Only HTTPS URLs are allowed');
+    expect(() => new Source('http://example.com')).toThrow(
+      'Only HTTPS URLs are allowed'
+    );
   });
 
   it('throws error for invalid URL', () => {
@@ -21,7 +29,9 @@ describe('Source', () => {
   });
 
   it('identifies MDN URLs', () => {
-    const source = new Source('https://developer.mozilla.org/en-US/docs/Web/HTML');
+    const source = new Source(
+      'https://developer.mozilla.org/en-US/docs/Web/HTML'
+    );
     expect(source.isMDN()).toBe(true);
   });
 

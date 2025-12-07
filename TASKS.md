@@ -3,6 +3,7 @@
 ## Epic 1: Project Setup & Infrastructure
 
 ### Ticket 1.1: Configure Astro Content Collections
+
 **Priority:** High
 **Effort:** S
 
@@ -12,12 +13,14 @@
 - [ ] Generate TypeScript types for Article, SEOMetadata
 
 **Acceptance Criteria:**
+
 - Schema validates: title, description, date, tags, source
 - Missing required fields throw build errors
 
 ---
 
 ### Ticket 1.2: Vitest Setup
+
 **Priority:** High
 **Effort:** S
 
@@ -27,12 +30,14 @@
 - [ ] Add npm scripts: `test`, `test:watch`, `test:coverage`
 
 **Acceptance Criteria:**
+
 - `npm test` runs all tests
 - Coverage report is generated
 
 ---
 
 ### Ticket 1.3: Environment & Secrets Setup
+
 **Priority:** High
 **Effort:** S
 
@@ -42,6 +47,7 @@
 - [ ] Implement environment validation on startup
 
 **Acceptance Criteria:**
+
 - App does not start without valid API keys
 - No secrets in repository
 
@@ -50,6 +56,7 @@
 ## Epic 2: Domain Layer (DDD)
 
 ### Ticket 2.1: Implement Article Entity
+
 **Priority:** High
 **Effort:** M
 
@@ -59,6 +66,7 @@
 - [ ] Unit tests for Article Entity
 
 **Acceptance Criteria:**
+
 ```typescript
 const article = new Article({ title: 'HTML Accessibility Grundlagen' });
 expect(article.slug).toBe('html-accessibility-grundlagen');
@@ -67,6 +75,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 ---
 
 ### Ticket 2.2: Implement Value Objects
+
 **Priority:** Medium
 **Effort:** M
 
@@ -76,12 +85,14 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] Unit tests for all Value Objects
 
 **Acceptance Criteria:**
+
 - SEOMetadata throws error for too long title
 - Slug only allows lowercase, numbers, hyphens
 
 ---
 
 ### Ticket 2.3: Implement Source Entity
+
 **Priority:** Medium
 **Effort:** S
 
@@ -91,6 +102,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] Unit tests
 
 **Acceptance Criteria:**
+
 - Only HTTPS URLs accepted
 - Invalid URLs throw error
 
@@ -99,6 +111,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 ## Epic 3: Content Generation Service
 
 ### Ticket 3.1: ContentGenerator Service Structure
+
 **Priority:** High
 **Effort:** M
 
@@ -108,12 +121,14 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] Error handling & retry logic
 
 **Acceptance Criteria:**
+
 - Service is testable with mock AI client
 - Errors are thrown cleanly
 
 ---
 
 ### Ticket 3.2: Source Content Fetcher
+
 **Priority:** High
 **Effort:** M
 
@@ -123,12 +138,14 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] Rate limiting for external requests
 
 **Acceptance Criteria:**
+
 - MDN pages are parsed correctly
 - Timeouts are handled
 
 ---
 
 ### Ticket 3.3: AI Prompt Engineering
+
 **Priority:** High
 **Effort:** L
 
@@ -139,6 +156,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] Prompt templates for different topics
 
 **Acceptance Criteria:**
+
 - Generated text is in German
 - Text contains call-to-action
 - Minimum 800 words
@@ -146,6 +164,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 ---
 
 ### Ticket 3.4: Integration Test with Real AI Service
+
 **Priority:** High
 **Effort:** M
 
@@ -155,6 +174,7 @@ expect(article.slug).toBe('html-accessibility-grundlagen');
 - [ ] CI integration (optional, has cost)
 
 **Acceptance Criteria:**
+
 ```typescript
 const result = await generator.generate(MDN_URL);
 expect(result.content).toContain('Barrierefreiheit');
@@ -166,6 +186,7 @@ expect(result.content.length).toBeGreaterThan(800);
 ## Epic 4: File Writer Service
 
 ### Ticket 4.1: Implement FileWriter Service
+
 **Priority:** High
 **Effort:** M
 
@@ -175,12 +196,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Auto-create directory (year/month)
 
 **Acceptance Criteria:**
+
 - File is saved in correct path
 - Frontmatter is valid YAML
 
 ---
 
 ### Ticket 4.2: Filename Generation
+
 **Priority:** Medium
 **Effort:** S
 
@@ -189,6 +212,7 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Suffix for duplicates (-2, -3, etc.)
 
 **Acceptance Criteria:**
+
 - No overwrite without warning
 - Filenames are URL-safe
 
@@ -197,6 +221,7 @@ expect(result.content.length).toBeGreaterThan(800);
 ## Epic 5: Image Generation
 
 ### Ticket 5.1: ImageGenerator Service
+
 **Priority:** Medium
 **Effort:** L
 
@@ -206,12 +231,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Image download and storage
 
 **Acceptance Criteria:**
+
 - Image saved as WebP
 - Resolution: 1200x630px
 
 ---
 
 ### Ticket 5.2: Alt-Text Generation
+
 **Priority:** Low
 **Effort:** S
 
@@ -220,6 +247,7 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Accessibility compliant
 
 **Acceptance Criteria:**
+
 - Alt-text describes image content
 - Max 125 characters
 
@@ -228,6 +256,7 @@ expect(result.content.length).toBeGreaterThan(800);
 ## Epic 6: Editor Interface
 
 ### Ticket 6.1: Editor Route & Layout
+
 **Priority:** High
 **Effort:** M
 
@@ -237,12 +266,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Styling (Tailwind or CSS)
 
 **Acceptance Criteria:**
+
 - Route is accessible
 - Basic layout is in place
 
 ---
 
 ### Ticket 6.2: URL Input Component
+
 **Priority:** High
 **Effort:** S
 
@@ -251,12 +282,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Submit handler
 
 **Acceptance Criteria:**
+
 - Only valid URLs are accepted
 - Errors are displayed
 
 ---
 
 ### Ticket 6.3: Topics Dropdown
+
 **Priority:** Medium
 **Effort:** S
 
@@ -265,12 +298,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Multi-select optional
 
 **Acceptance Criteria:**
+
 - All topics from claude.md available
 - Selection is passed to generator
 
 ---
 
 ### Ticket 6.4: Content Preview
+
 **Priority:** High
 **Effort:** M
 
@@ -280,12 +315,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Scroll container for long text
 
 **Acceptance Criteria:**
+
 - Markdown renders correctly
 - Code blocks have syntax highlighting
 
 ---
 
 ### Ticket 6.5: Action Buttons
+
 **Priority:** High
 **Effort:** M
 
@@ -295,12 +332,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] "Save" button with success feedback
 
 **Acceptance Criteria:**
+
 - Loading spinner during generation
 - Success/error messages are displayed
 
 ---
 
 ### Ticket 6.6: Server Actions for Editor
+
 **Priority:** High
 **Effort:** M
 
@@ -310,6 +349,7 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] CORS configuration if needed
 
 **Acceptance Criteria:**
+
 - Actions work without page reload
 - Errors are returned to client
 
@@ -318,6 +358,7 @@ expect(result.content.length).toBeGreaterThan(800);
 ## Epic 7: Quality Assurance
 
 ### Ticket 7.1: Pre-commit Hooks
+
 **Priority:** Medium
 **Effort:** S
 
@@ -327,12 +368,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Unit tests on commit
 
 **Acceptance Criteria:**
+
 - Commit is blocked on lint errors
 - Tests must be green
 
 ---
 
 ### Ticket 7.2: CI Pipeline
+
 **Priority:** Medium
 **Effort:** M
 
@@ -342,12 +385,14 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Optional: Integration tests
 
 **Acceptance Criteria:**
+
 - PR cannot be merged on failure
 - Build status is displayed
 
 ---
 
 ### Ticket 7.3: E2E Tests for Editor
+
 **Priority:** Low
 **Effort:** L
 
@@ -356,6 +401,7 @@ expect(result.content.length).toBeGreaterThan(800);
 - [ ] Test error states
 
 **Acceptance Criteria:**
+
 - Happy path works
 - Errors are displayed correctly
 
@@ -364,23 +410,27 @@ expect(result.content.length).toBeGreaterThan(800);
 ## Prioritized Order
 
 ### Sprint 1: Foundation
+
 1. Ticket 1.1: Astro Content Collections
 2. Ticket 1.2: Vitest Setup
 3. Ticket 1.3: Environment Setup
 4. Ticket 2.1: Article Entity
 
 ### Sprint 2: Core Services
+
 5. Ticket 2.2: Value Objects
 6. Ticket 3.1: ContentGenerator Structure
 7. Ticket 3.2: Source Content Fetcher
 8. Ticket 3.3: AI Prompt Engineering
 
 ### Sprint 3: File Operations
+
 9. Ticket 4.1: FileWriter Service
 10. Ticket 3.4: Integration Tests
 11. Ticket 4.2: Filename Generation
 
 ### Sprint 4: Editor UI
+
 12. Ticket 6.1: Editor Route
 13. Ticket 6.2: URL Input
 14. Ticket 6.4: Content Preview
@@ -388,6 +438,7 @@ expect(result.content.length).toBeGreaterThan(800);
 16. Ticket 6.6: Server Actions
 
 ### Sprint 5: Polish & QA
+
 17. Ticket 6.3: Topics Dropdown
 18. Ticket 7.1: Pre-commit Hooks
 19. Ticket 7.2: CI Pipeline
@@ -395,4 +446,4 @@ expect(result.content.length).toBeGreaterThan(800);
 
 ---
 
-*Created: 2025-12-07*
+_Created: 2025-12-07_

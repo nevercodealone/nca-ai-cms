@@ -8,7 +8,8 @@ describe('Article', () => {
     content: '# HTML Accessibility\n\nContent here...',
     date: new Date('2025-12-07'),
     tags: ['accessibility', 'html'],
-    source: 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML',
+    source:
+      'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML',
   };
 
   it('creates article with valid props', () => {
@@ -29,7 +30,9 @@ describe('Article', () => {
 
   it('generates correct filepath with year and month', () => {
     const article = new Article(defaultProps);
-    expect(article.filepath).toBe('src/content/articles/2025/12/html-accessibility-grundlagen.md');
+    expect(article.filepath).toBe(
+      'src/content/articles/2025/12/html-accessibility-grundlagen.md'
+    );
   });
 
   it('extracts year from date', () => {
@@ -50,10 +53,14 @@ describe('Article', () => {
     const frontmatter = article.toFrontmatter();
 
     expect(frontmatter.title).toBe('HTML Accessibility Grundlagen');
-    expect(frontmatter.description).toBe('Lernen Sie die Grundlagen der HTML-Barrierefreiheit');
+    expect(frontmatter.description).toBe(
+      'Lernen Sie die Grundlagen der HTML-Barrierefreiheit'
+    );
     expect(frontmatter.date).toBe('2025-12-07');
     expect(frontmatter.tags).toEqual(['accessibility', 'html']);
-    expect(frontmatter.source).toBe('https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML');
+    expect(frontmatter.source).toBe(
+      'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML'
+    );
   });
 
   it('generates complete markdown with frontmatter', () => {

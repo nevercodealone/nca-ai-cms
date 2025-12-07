@@ -1,11 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Editor from '../components/Editor';
+import EditorComponent from '../components/Editor';
 ---
 
 <Layout title="Editor">
   <div class="container">
     <h1 style="font-size: 2rem; margin-bottom: 2rem;">Content Editor</h1>
-    <Editor client:load />
+    <EditorComponent client:load />
   </div>
 </Layout>

@@ -10,7 +10,7 @@ export type ArticleProps = {
   source: string;
   image?: string;
   imageAlt?: string;
-}
+};
 
 export class Article {
   readonly title: string;
@@ -33,8 +33,12 @@ export class Article {
     this.source = props.source;
     this.slug = new Slug(props.title);
     this.seoMetadata = SEOMetadata.truncate(props.title, props.description);
-    this.image = props.image;
-    this.imageAlt = props.imageAlt;
+    if (props.image !== undefined) {
+      this.image = props.image;
+    }
+    if (props.imageAlt !== undefined) {
+      this.imageAlt = props.imageAlt;
+    }
   }
 
   get filename(): string {

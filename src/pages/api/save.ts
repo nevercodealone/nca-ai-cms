@@ -18,20 +18,26 @@ export const POST: APIRoute = async ({ request }) => {
     const writer = new FileWriter();
     const result = await writer.write(article);
 
-    return new Response(JSON.stringify({
-      success: true,
-      filepath: result.filepath,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        filepath: result.filepath,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Save error:', error);
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Save failed',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Save failed',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 };
