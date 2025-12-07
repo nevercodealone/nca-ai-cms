@@ -9,12 +9,16 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "astro check && tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@astrojs/node": "^9.5.1",
     "@astrojs/react": "^4.4.2",
+    "@google/genai": "^1.31.0",
     "@google/generative-ai": "^0.24.1",
     "@vitest/coverage-v8": "^4.0.15",
     "astro": "^5.16.4",
@@ -22,5 +26,11 @@
     "react-dom": "^19.2.1",
     "vitest": "^4.0.15",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "prettier": "^3.7.4",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.3"
   }
 }
