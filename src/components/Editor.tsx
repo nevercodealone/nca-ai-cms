@@ -1,35 +1,5 @@
 import { useState } from 'react';
 
-const DEFAULT_SOURCE_URL =
-  'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML';
-
-const TOPICS = [
-  'Audio-Only or Video-Only',
-  'CAPTCHA',
-  'Changing (Dynamic) Content',
-  'Contrast',
-  'Flashing',
-  'Forms',
-  'Frames & iFrames',
-  'Headings',
-  'Images',
-  'Keyboard and Focus',
-  'Language',
-  'Links and Buttons',
-  'Multiple Ways',
-  'Page Title',
-  'Parsing',
-  'Repetitive Content',
-  'Resizable Text',
-  'Sensory Characteristics',
-  'Stylesheet',
-  'Synchronized Media',
-  'Tables',
-  'Timed Events',
-];
-
-type InputMode = 'preset' | 'custom';
-
 interface GeneratedArticle {
   title: string;
   description: string;
@@ -44,10 +14,7 @@ interface GeneratedImage {
 }
 
 export default function Editor() {
-  const [inputMode, setInputMode] = useState<InputMode>('preset');
-  const [topic, setTopic] = useState('');
-  const [customTopic, setCustomTopic] = useState('');
-  const [customUrl, setCustomUrl] = useState('');
+  const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [article, setArticle] = useState<GeneratedArticle | null>(null);
   const [image, setImage] = useState<GeneratedImage | null>(null);
@@ -57,45 +24,42 @@ export default function Editor() {
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
 
-  const handleTopicChange = (newTopic: string) => {
-    setTopic(newTopic);
+  const handleInputChange = (value: string) => {
+    setInput(value);
     setArticle(null);
     setImage(null);
     setPublished(false);
     setError(null);
   };
 
-  const handleModeChange = (mode: InputMode) => {
-    setInputMode(mode);
-    setTopic('');
-    setCustomTopic('');
-    setCustomUrl('');
-    setArticle(null);
-    setImage(null);
-    setPublished(false);
-    setError(null);
+  const isUrl = (value: string): boolean => {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
-  const getActiveTopic = () => {
-    return inputMode === 'preset' ? topic : customTopic;
-  };
-
-  const getActiveUrl = () => {
-    return inputMode === 'custom' && customUrl ? customUrl : DEFAULT_SOURCE_URL;
+  const getInputType = (): 'url' | 'keywords' | 'empty' => {
+    if (!input.trim()) return 'empty';
+    return isUrl(input.trim()) ? 'url' : 'keywords';
   };
 
   const canGenerate = () => {
-    if (inputMode === 'preset') {
-      return topic.length > 0;
-    }
-    return customTopic.length > 0;
+    return input.trim().length > 0;
   };
 
   const generateText = async (): Promise<GeneratedArticle | null> => {
+    const type = getInputType();
     const response = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: getActiveUrl(), topic: getActiveTopic() }),
+      body: JSON.stringify(
+        type === 'url'
+          ? { url: input.trim() }
+          : { keywords: input.trim() }
+      ),
     });
 
     if (!response.ok) {
@@ -106,11 +70,11 @@ export default function Editor() {
     return response.json();
   };
 
-  const generateImage = async (title?: string): Promise<GeneratedImage | null> => {
+  const generateImage = async (title: string): Promise<GeneratedImage | null> => {
     const response = await fetch('/api/generate-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: getActiveTopic(), title }),
+      body: JSON.stringify({ title }),
     });
 
     if (!response.ok) {
@@ -130,14 +94,15 @@ export default function Editor() {
     setImage(null);
 
     try {
-      // Generate both in parallel
-      const [textData, imageData] = await Promise.all([
-        generateText(),
-        generateImage(),
-      ]);
-
+      // First generate text to get the title
+      const textData = await generateText();
       setArticle(textData);
-      setImage(imageData);
+
+      // Then generate image using the title
+      if (textData?.title) {
+        const imageData = await generateImage(textData.title);
+        setImage(imageData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed');
     } finally {
@@ -162,13 +127,13 @@ export default function Editor() {
   };
 
   const handleRegenerateImage = async () => {
-    if (!canGenerate()) return;
+    if (!article?.title) return;
 
     setRegeneratingImage(true);
     setError(null);
 
     try {
-      const data = await generateImage(article?.title);
+      const data = await generateImage(article.title);
       setImage(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Image generation failed');
@@ -223,10 +188,7 @@ export default function Editor() {
   };
 
   const handleCreateNew = () => {
-    setInputMode('preset');
-    setTopic('');
-    setCustomTopic('');
-    setCustomUrl('');
+    setInput('');
     setArticle(null);
     setImage(null);
     setPublished(false);
@@ -268,82 +230,25 @@ export default function Editor() {
           </div>
         ) : (
           <>
-            {/* Mode Toggle */}
-            <div style={styles.modeToggle}>
-              <button
-                type="button"
-                onClick={() => handleModeChange('preset')}
-                style={{
-                  ...styles.modeButton,
-                  ...(inputMode === 'preset' ? styles.modeButtonActive : {}),
-                }}
+            {/* Input Field */}
+            <div style={styles.field}>
+              <label style={styles.label}>URL oder Thema</label>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="https://... oder Keywords eingeben"
+                style={styles.input}
                 disabled={isLoading}
-              >
-                Vorlagen
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeChange('custom')}
-                style={{
-                  ...styles.modeButton,
-                  ...(inputMode === 'custom' ? styles.modeButtonActive : {}),
-                }}
-                disabled={isLoading}
-              >
-                Eigenes Thema
-              </button>
+              />
+              <span style={styles.hint}>
+                {getInputType() === 'url'
+                  ? 'URL erkannt – Inhalt wird analysiert'
+                  : getInputType() === 'keywords'
+                  ? 'Keywords erkannt – Recherche wird durchgeführt'
+                  : 'URL für Analyse oder Keywords für Recherche'}
+              </span>
             </div>
-
-            {/* Preset Topic Selection */}
-            {inputMode === 'preset' && (
-              <div style={styles.field}>
-                <label style={styles.label}>Thema auswählen</label>
-                <select
-                  value={topic}
-                  onChange={(e) => handleTopicChange(e.target.value)}
-                  style={styles.select}
-                  disabled={isLoading}
-                >
-                  <option value="">-- Thema wählen --</option>
-                  {TOPICS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Custom Topic Input */}
-            {inputMode === 'custom' && (
-              <>
-                <div style={styles.field}>
-                  <label style={styles.label}>Thema eingeben</label>
-                  <input
-                    type="text"
-                    value={customTopic}
-                    onChange={(e) => setCustomTopic(e.target.value)}
-                    placeholder="z.B. ARIA Labels, Skip Links, ..."
-                    style={styles.input}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div style={styles.field}>
-                  <label style={styles.label}>Quell-URL (optional)</label>
-                  <input
-                    type="url"
-                    value={customUrl}
-                    onChange={(e) => setCustomUrl(e.target.value)}
-                    placeholder="https://..."
-                    style={styles.input}
-                    disabled={isLoading}
-                  />
-                  <span style={styles.hint}>
-                    Standard: MDN Web Accessibility
-                  </span>
-                </div>
-              </>
-            )}
 
             {/* Generate Button - before content exists */}
             {canGenerate() && !hasContent && (
@@ -524,30 +429,6 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.05em',
     transition: 'all 0.2s ease',
   },
-  modeToggle: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0.5rem',
-    marginBottom: '1.5rem',
-    padding: '0.25rem',
-    background: 'var(--color-bg, #0a0a0b)',
-    borderRadius: '8px',
-  },
-  modeButton: {
-    padding: '0.75rem 1rem',
-    background: 'transparent',
-    border: 'none',
-    borderRadius: '6px',
-    color: 'var(--color-text-muted, #706d68)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-  },
-  modeButtonActive: {
-    background: 'var(--color-surface-elevated, #1a1a1d)',
-    color: 'var(--color-text, #faf9f7)',
-  },
   field: {
     marginBottom: '1.5rem',
   },
@@ -559,17 +440,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.12em',
-  },
-  select: {
-    width: '100%',
-    padding: '1rem',
-    background: 'var(--color-bg, #0a0a0b)',
-    border: '1px solid var(--color-border, #2a2a2e)',
-    borderRadius: '8px',
-    color: 'var(--color-text, #faf9f7)',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'border-color 0.2s ease',
   },
   input: {
     width: '100%',

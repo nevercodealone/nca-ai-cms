@@ -1,21 +1,16 @@
 import type { APIRoute } from 'astro';
 import { ContentGenerator } from '../../services/ContentGenerator';
 
-const DEFAULT_URL =
-  'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML';
-
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { url, topic } = await request.json();
+    const { url, keywords } = await request.json();
 
-    if (!topic) {
-      return new Response(JSON.stringify({ error: 'Topic is required' }), {
+    if (!url && !keywords) {
+      return new Response(JSON.stringify({ error: 'URL or keywords required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    const sourceUrl = url || DEFAULT_URL;
 
     const apiKey = import.meta.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
@@ -29,7 +24,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const generator = new ContentGenerator({ apiKey });
-    const article = await generator.generate(sourceUrl, topic);
+    const article = url
+      ? await generator.generateFromUrl(url)
+      : await generator.generateFromKeywords(keywords);
 
     return new Response(
       JSON.stringify({
