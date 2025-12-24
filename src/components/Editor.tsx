@@ -200,7 +200,7 @@ export default function Editor() {
     window.location.href = '/login';
   };
 
-  const hasContent = article && image;
+  const hasContent = article !== null;
   const isLoading = generating || regeneratingText || regeneratingImage || publishing;
 
   return (
@@ -304,12 +304,12 @@ export default function Editor() {
                 </div>
                 <button
                   onClick={handlePublish}
-                  disabled={publishing}
+                  disabled={publishing || !image}
                   style={{
                     ...styles.button,
                     ...styles.publishButton,
-                    opacity: publishing ? 0.6 : 1,
-                    cursor: publishing ? 'not-allowed' : 'pointer',
+                    opacity: (publishing || !image) ? 0.6 : 1,
+                    cursor: (publishing || !image) ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {publishing ? (
