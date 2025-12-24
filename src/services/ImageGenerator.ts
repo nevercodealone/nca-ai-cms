@@ -25,9 +25,9 @@ export class ImageGenerator {
     this.model = config.model || 'imagen-4.0-generate-001';
   }
 
-  async generate(topic: string, title?: string): Promise<GeneratedImage> {
-    const prompt = this.buildPrompt(topic, title);
-    const filename = await this.generateSeoFilename(topic);
+  async generate(title: string): Promise<GeneratedImage> {
+    const prompt = this.buildPrompt(title);
+    const filename = await this.generateSeoFilename(title);
     const filepath = `public/images/${filename}.webp`;
 
     try {
@@ -57,7 +57,7 @@ export class ImageGenerator {
 
       return {
         url: `data:image/png;base64,${base64}`,
-        alt: this.generateAlt(topic, title),
+        alt: this.generateAlt(title),
         filepath,
         base64,
       };
@@ -69,25 +69,20 @@ export class ImageGenerator {
     }
   }
 
-  private buildPrompt(topic: string, title?: string): string {
-    const context = title || topic;
-
-    return `Blog header image about "${context}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people, no text.`;
+  private buildPrompt(title: string): string {
+    return `Blog header image about "${title}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people, no text.`;
   }
 
-  private generateAlt(topic: string, title?: string): string {
-    if (title) {
-      return `Illustration zum Thema ${title} - Barrierefreiheit im Web`;
-    }
-    return `Illustration zum Thema ${topic} - Barrierefreiheit im Web`;
+  private generateAlt(title: string): string {
+    return `Illustration zum Thema ${title} - Barrierefreiheit im Web`;
   }
 
-  private async generateSeoFilename(topic: string): Promise<string> {
+  private async generateSeoFilename(title: string): Promise<string> {
     const model = this.textClient.getGenerativeModel({
       model: 'gemini-2.0-flash',
     });
 
-    const prompt = `Generate a single SEO-optimized filename for an image about web accessibility topic "${topic}".
+    const prompt = `Generate a single SEO-optimized filename for an image about web accessibility article titled "${title}".
 Requirements:
 - German and English keywords mixed
 - Lowercase, words separated by hyphens

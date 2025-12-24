@@ -3,10 +3,10 @@ import { ImageGenerator } from '../../services/ImageGenerator';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { topic, title } = await request.json();
+    const { title } = await request.json();
 
-    if (!topic) {
-      return new Response(JSON.stringify({ error: 'Topic is required' }), {
+    if (!title) {
+      return new Response(JSON.stringify({ error: 'Title is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const generator = new ImageGenerator({ apiKey });
-    const image = await generator.generate(topic, title);
+    const image = await generator.generate(title);
 
     return new Response(
       JSON.stringify({
