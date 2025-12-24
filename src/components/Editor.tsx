@@ -220,7 +220,12 @@ export default function Editor() {
         {/* Published State */}
         {published ? (
           <div style={styles.successBox}>
-            <div style={styles.successIcon}>✓</div>
+            <div style={styles.successIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
             <h3 style={styles.successTitle}>Artikel veröffentlicht!</h3>
             <p style={styles.successPath}>{article?.filepath}</p>
             <button onClick={handleCreateNew} style={styles.newButton}>
@@ -255,10 +260,18 @@ export default function Editor() {
                 style={{
                   ...styles.button,
                   ...styles.generateButton,
-                  opacity: generating ? 0.5 : 1,
+                  opacity: generating ? 0.6 : 1,
+                  cursor: generating ? 'not-allowed' : 'pointer',
                 }}
               >
-                {generating ? 'Generiere Bild & Text...' : 'Generieren'}
+                {generating ? (
+                  <span style={styles.buttonContent}>
+                    <span style={styles.spinner}></span>
+                    Generiere Bild & Text...
+                  </span>
+                ) : (
+                  'Generieren'
+                )}
               </button>
             )}
 
@@ -272,10 +285,11 @@ export default function Editor() {
                     style={{
                       ...styles.button,
                       ...styles.secondaryButton,
-                      opacity: isLoading ? 0.5 : 1,
+                      opacity: isLoading ? 0.6 : 1,
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {regeneratingImage ? 'Generiere...' : '🖼️ Bild neu'}
+                    {regeneratingImage ? 'Generiere...' : 'Bild neu'}
                   </button>
                   <button
                     onClick={handleRegenerateText}
@@ -283,10 +297,11 @@ export default function Editor() {
                     style={{
                       ...styles.button,
                       ...styles.secondaryButton,
-                      opacity: isLoading ? 0.5 : 1,
+                      opacity: isLoading ? 0.6 : 1,
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {regeneratingText ? 'Generiere...' : '📄 Text neu'}
+                    {regeneratingText ? 'Generiere...' : 'Text neu'}
                   </button>
                 </div>
                 <button
@@ -295,10 +310,18 @@ export default function Editor() {
                   style={{
                     ...styles.button,
                     ...styles.publishButton,
-                    opacity: publishing ? 0.5 : 1,
+                    opacity: publishing ? 0.6 : 1,
+                    cursor: publishing ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {publishing ? 'Veröffentliche...' : 'Veröffentlichen'}
+                  {publishing ? (
+                    <span style={styles.buttonContent}>
+                      <span style={styles.spinner}></span>
+                      Veröffentliche...
+                    </span>
+                  ) : (
+                    'Veröffentlichen'
+                  )}
                 </button>
               </div>
             )}
@@ -314,7 +337,13 @@ export default function Editor() {
           <div style={{ ...styles.preview, ...(published ? styles.publishedPreview : {}) }}>
             <div style={styles.previewHeader}>
               <h3 style={styles.previewTitle}>
-                🖼️ Bild {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>Bild</span>
+                {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
               </h3>
               <span style={styles.filepath}>{image.filepath}</span>
             </div>
@@ -329,16 +358,25 @@ export default function Editor() {
           <div style={{ ...styles.preview, ...(published ? styles.publishedPreview : {}) }}>
             <div style={styles.previewHeader}>
               <h3 style={styles.previewTitle}>
-                📄 Text {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Text</span>
+                {published && <span style={styles.publishedBadge}>Veröffentlicht</span>}
               </h3>
               <span style={styles.filepath}>{article.filepath}</span>
             </div>
             <div style={styles.frontmatter}>
-              <div>
-                <strong>Titel:</strong> {article.title}
+              <div style={styles.frontmatterRow}>
+                <span style={styles.frontmatterLabel}>Titel</span>
+                <span style={styles.frontmatterValue}>{article.title}</span>
               </div>
-              <div>
-                <strong>Beschreibung:</strong> {article.description}
+              <div style={styles.frontmatterRow}>
+                <span style={styles.frontmatterLabel}>Beschreibung</span>
+                <span style={styles.frontmatterValue}>{article.description}</span>
               </div>
             </div>
             <div style={styles.content}>
@@ -355,194 +393,276 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'grid',
     gap: '2rem',
-    gridTemplateColumns: '350px 1fr',
+    gridTemplateColumns: '380px 1fr',
   },
   panel: {
-    background: '#1e293b',
-    borderRadius: '8px',
-    padding: '1.5rem',
+    background: 'var(--color-surface, #141416)',
+    borderRadius: '16px',
+    padding: '2rem',
     height: 'fit-content',
+    border: '1px solid var(--color-border, #2a2a2e)',
   },
   headerRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1.5rem',
+    marginBottom: '2rem',
+    paddingBottom: '1.5rem',
+    borderBottom: '1px solid var(--color-border, #2a2a2e)',
   },
   heading: {
-    fontSize: '1.25rem',
+    fontFamily: 'var(--font-display, "Playfair Display", Georgia, serif)',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    letterSpacing: '-0.02em',
     margin: 0,
+    color: 'var(--color-text, #faf9f7)',
   },
   logoutButton: {
-    padding: '0.4rem 0.75rem',
+    padding: '0.5rem 1rem',
     background: 'transparent',
-    border: '1px solid #475569',
-    borderRadius: '4px',
-    color: '#94a3b8',
+    border: '1px solid var(--color-border-accent, #3a3a40)',
+    borderRadius: '6px',
+    color: 'var(--color-text-muted, #706d68)',
     cursor: 'pointer',
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    transition: 'all 0.2s ease',
   },
   field: {
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
   },
   label: {
     display: 'block',
-    marginBottom: '0.5rem',
-    color: '#94a3b8',
-    fontSize: '0.875rem',
+    marginBottom: '0.75rem',
+    color: 'var(--color-text-muted, #706d68)',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.12em',
   },
   select: {
     width: '100%',
-    padding: '0.75rem',
-    background: '#0f172a',
-    border: '1px solid #334155',
-    borderRadius: '4px',
-    color: '#f1f5f9',
+    padding: '1rem',
+    background: 'var(--color-bg, #0a0a0b)',
+    border: '1px solid var(--color-border, #2a2a2e)',
+    borderRadius: '8px',
+    color: 'var(--color-text, #faf9f7)',
     fontSize: '1rem',
+    cursor: 'pointer',
+    transition: 'border-color 0.2s ease',
   },
   button: {
-    padding: '0.75rem 1rem',
-    background: '#334155',
+    padding: '1rem 1.25rem',
+    background: 'var(--color-surface-elevated, #1a1a1d)',
     border: 'none',
-    borderRadius: '4px',
-    color: '#f1f5f9',
+    borderRadius: '8px',
+    color: 'var(--color-text, #faf9f7)',
     cursor: 'pointer',
     fontSize: '0.9rem',
+    fontWeight: 600,
+    transition: 'all 0.2s ease',
   },
   generateButton: {
-    background: '#3b82f6',
+    background: 'var(--color-primary, #e63946)',
     width: '100%',
-    padding: '1rem',
+    padding: '1.25rem',
     fontSize: '1rem',
-    fontWeight: 'bold',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    boxShadow: '0 4px 20px rgba(230, 57, 70, 0.3)',
+  },
+  buttonContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+  },
+  spinner: {
+    width: '18px',
+    height: '18px',
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderTopColor: '#fff',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
   },
   actionSection: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '0.75rem',
   },
   regenerateRow: {
-    display: 'flex',
-    gap: '0.5rem',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.75rem',
   },
   secondaryButton: {
-    background: '#475569',
-    flex: 1,
+    background: 'var(--color-surface-accent, #222226)',
+    fontSize: '0.875rem',
+    padding: '1rem',
   },
   publishButton: {
-    background: '#22c55e',
+    background: 'var(--color-success, #4ade80)',
+    color: '#000',
     width: '100%',
-    padding: '1rem',
+    padding: '1.25rem',
     fontSize: '1rem',
-    fontWeight: 'bold',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    boxShadow: '0 4px 20px rgba(74, 222, 128, 0.3)',
   },
   successBox: {
-    textAlign: 'center',
-    padding: '2rem 1rem',
+    textAlign: 'center' as const,
+    padding: '3rem 1.5rem',
+    background: 'var(--color-success-muted, rgba(74, 222, 128, 0.12))',
+    borderRadius: '12px',
+    border: '1px solid rgba(74, 222, 128, 0.3)',
   },
   successIcon: {
-    fontSize: '3rem',
-    color: '#22c55e',
-    marginBottom: '1rem',
+    color: 'var(--color-success, #4ade80)',
+    marginBottom: '1.5rem',
+    display: 'flex',
+    justifyContent: 'center',
   },
   successTitle: {
-    fontSize: '1.25rem',
-    marginBottom: '0.5rem',
+    fontFamily: 'var(--font-display, "Playfair Display", Georgia, serif)',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    marginBottom: '0.75rem',
+    color: 'var(--color-text, #faf9f7)',
   },
   successPath: {
-    color: '#94a3b8',
+    color: 'var(--color-text-muted, #706d68)',
     fontSize: '0.875rem',
-    fontFamily: 'monospace',
-    marginBottom: '1.5rem',
+    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+    marginBottom: '2rem',
+    wordBreak: 'break-all' as const,
   },
   newButton: {
-    padding: '0.75rem 1.5rem',
-    background: '#3b82f6',
+    padding: '1rem 2rem',
+    background: 'var(--color-primary, #e63946)',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     color: '#fff',
     cursor: 'pointer',
     fontSize: '1rem',
+    fontWeight: 600,
+    boxShadow: '0 4px 20px rgba(230, 57, 70, 0.3)',
   },
   error: {
-    marginTop: '1rem',
-    padding: '0.75rem',
-    background: '#7f1d1d',
-    borderRadius: '4px',
-    color: '#fecaca',
+    marginTop: '1.5rem',
+    padding: '1rem',
+    background: 'var(--color-error-muted, rgba(248, 113, 113, 0.12))',
+    border: '1px solid rgba(248, 113, 113, 0.3)',
+    borderRadius: '8px',
+    color: 'var(--color-error, #f87171)',
+    fontSize: '0.9rem',
   },
   previewArea: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
+    flexDirection: 'column' as const,
+    gap: '1.5rem',
   },
   preview: {
-    background: '#1e293b',
-    borderRadius: '8px',
+    background: 'var(--color-surface, #141416)',
+    borderRadius: '16px',
     overflow: 'hidden',
+    border: '1px solid var(--color-border, #2a2a2e)',
   },
   publishedPreview: {
-    border: '2px solid #22c55e',
+    borderColor: 'var(--color-success, #4ade80)',
+    boxShadow: '0 0 24px rgba(74, 222, 128, 0.15)',
   },
   previewHeader: {
-    padding: '1rem 1.5rem',
-    borderBottom: '1px solid #334155',
+    padding: '1.25rem 1.5rem',
+    borderBottom: '1px solid var(--color-border, #2a2a2e)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    background: 'var(--color-surface-elevated, #1a1a1d)',
   },
   previewTitle: {
-    fontSize: '1rem',
+    fontSize: '0.875rem',
+    fontWeight: 600,
     margin: 0,
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.75rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    color: 'var(--color-text, #faf9f7)',
   },
   publishedBadge: {
-    background: '#22c55e',
-    color: '#fff',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.7rem',
-    fontWeight: 'normal',
+    background: 'var(--color-success, #4ade80)',
+    color: '#000',
+    padding: '0.25rem 0.625rem',
+    borderRadius: '9999px',
+    fontSize: '0.65rem',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
   },
   filepath: {
-    color: '#94a3b8',
+    color: 'var(--color-text-muted, #706d68)',
     fontSize: '0.75rem',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
   },
   frontmatter: {
-    padding: '1rem 1.5rem',
-    borderBottom: '1px solid #334155',
-    fontSize: '0.875rem',
+    padding: '1.25rem 1.5rem',
+    borderBottom: '1px solid var(--color-border, #2a2a2e)',
     display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
+    flexDirection: 'column' as const,
+    gap: '1rem',
+  },
+  frontmatterRow: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+  },
+  frontmatterLabel: {
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em',
+    color: 'var(--color-text-muted, #706d68)',
+  },
+  frontmatterValue: {
+    fontSize: '0.9rem',
+    color: 'var(--color-text-accent, #e8e6e1)',
   },
   content: {
     padding: '1.5rem',
-    maxHeight: '400px',
+    maxHeight: '450px',
     overflow: 'auto',
+    background: 'var(--color-bg, #0a0a0b)',
   },
   markdown: {
-    fontFamily: 'monospace',
-    fontSize: '0.875rem',
-    whiteSpace: 'pre-wrap',
+    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+    fontSize: '0.85rem',
+    whiteSpace: 'pre-wrap' as const,
     margin: 0,
-    color: '#e2e8f0',
+    color: 'var(--color-text-accent, #e8e6e1)',
+    lineHeight: 1.7,
   },
   imagePreview: {
     padding: '1.5rem',
-    textAlign: 'center',
+    textAlign: 'center' as const,
+    background: 'var(--color-bg, #0a0a0b)',
   },
   image: {
     maxWidth: '100%',
-    maxHeight: '300px',
-    borderRadius: '4px',
+    maxHeight: '350px',
+    borderRadius: '8px',
+    boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.5)',
   },
   imageAlt: {
-    marginTop: '0.5rem',
-    color: '#94a3b8',
+    marginTop: '0.75rem',
+    color: 'var(--color-text-muted, #706d68)',
     fontSize: '0.875rem',
+    fontStyle: 'italic' as const,
   },
 };
