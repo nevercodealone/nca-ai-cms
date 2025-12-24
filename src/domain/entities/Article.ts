@@ -33,11 +33,7 @@ export class Article {
     this.slug = new Slug(props.title);
     this.seoMetadata = new SEOMetadata(props.title, props.description);
 
-    // Prepend full title as H1 if it exceeds SEO limit
-    this.content =
-      props.title.length > SEOMetadata.MAX_TITLE_LENGTH
-        ? `# ${props.title}\n\n${props.content}`
-        : props.content;
+    this.content = props.content;
 
     if (props.image !== undefined) {
       this.image = props.image;

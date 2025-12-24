@@ -36,7 +36,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
             {formattedDate}
           </time>
         </div>
-        <h1 class="article-title">{article.data.title}</h1>
         <p class="article-lede">{article.data.description}</p>
         {article.data.tags.length > 1 && (
           <div class="article-tags">
@@ -170,16 +169,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     color: var(--color-text-muted);
   }
 
-  .article-title {
-    font-family: var(--font-display);
-    font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl));
-    font-weight: 700;
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tighter);
-    margin-bottom: var(--space-6);
-    color: var(--color-text);
-  }
-
   .article-lede {
     font-family: var(--font-body);
     font-size: var(--text-xl);
@@ -268,6 +257,16 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
   }
 
   /* Headings */
+  .prose :global(h1) {
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl));
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tighter);
+    margin-bottom: var(--space-8);
+    color: var(--color-text);
+  }
+
   .prose :global(h2) {
     font-family: var(--font-display);
     font-size: var(--text-3xl);
@@ -568,10 +567,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
       padding: var(--space-10) 0 var(--space-8);
     }
 
-    .article-title {
-      font-size: var(--text-3xl);
-    }
-
     .article-lede {
       font-size: var(--text-lg);
     }
@@ -582,6 +577,10 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
     .prose :global(> p:first-of-type::first-letter) {
       font-size: 3.5em;
+    }
+
+    .prose :global(h1) {
+      font-size: var(--text-3xl);
     }
 
     .prose :global(h2) {
