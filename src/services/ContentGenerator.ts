@@ -15,6 +15,13 @@ export interface ContentGeneratorConfig {
   model?: string;
 }
 
+interface SourceAnalysis {
+  topic: string;
+  keyPoints: string[];
+  uniqueInsights: string[];
+  codeExamples: string[];
+}
+
 const CONTACT_URL =
   'https://nevercodealone.de/de/landingpages/barrierefreies-webdesign';
 
@@ -44,10 +51,15 @@ export class ContentGenerator {
     this.fetcher = new ContentFetcher();
   }
 
-  async generate(sourceUrl: string, topic?: string): Promise<Article> {
+  async generateFromUrl(sourceUrl: string): Promise<Article> {
     const source = new Source(sourceUrl);
     const fetchedContent = await this.fetcher.fetch(source);
-    const generated = await this.generateContent(fetchedContent, topic);
+
+    // Step 1: Analyze source to detect topic and extract insights
+    const analysis = await this.analyzeSource(fetchedContent);
+
+    // Step 2: Generate article based on analysis
+    const generated = await this.generateContent(analysis);
 
     const props: ArticleProps = {
       title: generated.title,
@@ -61,21 +73,175 @@ export class ContentGenerator {
     return new Article(props);
   }
 
+  async generateFromKeywords(keywords: string): Promise<Article> {
+    // Research the keywords using AI
+    const analysis = await this.researchKeywords(keywords);
+
+    // Generate article based on research
+    const generated = await this.generateContent(analysis);
+
+    const props: ArticleProps = {
+      title: generated.title,
+      description: generated.description,
+      content: generated.content,
+      date: new Date(),
+      tags: generated.tags,
+      source: `Recherche: ${keywords}`,
+    };
+
+    return new Article(props);
+  }
+
+  private async analyzeSource(fetched: FetchedContent): Promise<SourceAnalysis> {
+    const model = this.client.getGenerativeModel({
+      model: this.model,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            topic: {
+              type: 'string',
+              description: 'Das Hauptthema des Artikels in 2-5 Wörtern',
+            },
+            keyPoints: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Die wichtigsten Kernaussagen (3-5 Punkte)',
+            },
+            uniqueInsights: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Besondere/einzigartige Erkenntnisse oder Tipps aus dem Artikel',
+            },
+            codeExamples: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Wichtige Code-Beispiele oder Patterns aus dem Artikel',
+            },
+          },
+          required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
+        },
+      },
+    });
+
+    const prompt = `Analysiere diesen Web-Artikel und extrahiere die wichtigsten Informationen.
+
+Titel: ${fetched.title}
+URL: ${fetched.url}
+
+Inhalt:
+${fetched.content.slice(0, 12000)}
+
+Identifiziere:
+1. Das Hauptthema (fokussiert auf Web-Entwicklung/Barrierefreiheit)
+2. Die wichtigsten Kernaussagen
+3. Besondere Erkenntnisse oder einzigartige Tipps
+4. Relevante Code-Beispiele oder Patterns`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return JSON.parse(text);
+  }
+
+  private async researchKeywords(keywords: string): Promise<SourceAnalysis> {
+    const model = this.client.getGenerativeModel({
+      model: this.model,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            topic: {
+              type: 'string',
+              description: 'Das Hauptthema basierend auf den Keywords in 2-5 Wörtern',
+            },
+            keyPoints: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Die wichtigsten Fakten und Best Practices zum Thema (5-7 Punkte)',
+            },
+            uniqueInsights: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Weniger bekannte aber wichtige Erkenntnisse oder Experten-Tipps',
+            },
+            codeExamples: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Relevante Code-Patterns oder Beispiele für das Thema',
+            },
+          },
+          required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
+        },
+      },
+    });
+
+    const prompt = `Du bist ein Experte für Web-Accessibility und barrierefreie Webentwicklung.
+
+Recherchiere zum Thema: "${keywords}"
+
+Nutze dein Fachwissen um:
+1. Das Hauptthema klar zu definieren (Bezug zu Barrierefreiheit/Web-Accessibility)
+2. Die wichtigsten Fakten, Best Practices und WCAG-Richtlinien zusammenzufassen
+3. Weniger bekannte aber wichtige Tipps und Erkenntnisse zu identifizieren
+4. Praktische Code-Beispiele oder Patterns vorzuschlagen
+
+Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    return JSON.parse(text);
+  }
+
   private async generateContent(
-    fetched: FetchedContent,
-    topic?: string
+    analysis: SourceAnalysis
   ): Promise<GeneratedContent> {
     const systemPrompt = this.buildSystemPrompt();
-    const userPrompt = this.buildUserPrompt(fetched, topic);
+    const userPrompt = this.buildUserPrompt(analysis);
 
     const model = this.client.getGenerativeModel({
       model: this.model,
       systemInstruction: systemPrompt,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              description: 'SEO-optimierter Titel, max 60 Zeichen',
+            },
+            description: {
+              type: 'string',
+              description: 'Meta-Description, max 155 Zeichen',
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Relevante Tags für den Artikel',
+            },
+            content: {
+              type: 'string',
+              description:
+                'Vollständiger Markdown-Inhalt. MUSS mit H1 (# Titel) beginnen, dann H2/H3 Hierarchie. Keine HTML-Tags.',
+            },
+          },
+          required: ['title', 'description', 'tags', 'content'],
+        },
+      },
     });
 
     const result = await model.generateContent(userPrompt);
     const text = result.response.text();
-    return this.parseResponse(text);
+    const data = JSON.parse(text);
+
+    return {
+      title: data.title,
+      description: data.description,
+      content: data.content,
+      tags: [...new Set([...CORE_TAGS, ...data.tags])],
+    };
   }
 
   private buildSystemPrompt(): string {
@@ -88,91 +254,44 @@ Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
 Zielgruppe: Content-Marketing-Professionals und Frontend-Entwickler
 Tonalität: Professionell, aber zugänglich. Technisch korrekt, nicht übermäßig akademisch.
 
+WICHTIG - Originalität:
+- Schreibe einen KOMPLETT NEUEN Artikel basierend auf den Erkenntnissen
+- Kopiere KEINE Sätze oder Formulierungen aus der Quelle
+- Der Leser darf NICHT erkennen können, welche Quelle verwendet wurde
+- Nutze die Erkenntnisse als Inspiration, formuliere alles neu und eigenständig
+
 Regeln:
 - Schreibe auf Deutsch
 - Mindestens 800 Wörter
-- Verwende praktische Codebeispiele
-- Strukturiere mit H2 und H3 Überschriften (## und ###)
-- Keine Plagiate - reformuliere die Quelle, kopiere nicht
+- Verwende praktische Codebeispiele (eigene Beispiele, nicht kopiert)
+- WICHTIG: Content MUSS mit einer H1-Überschrift (# Titel) beginnen
+- Danach H2 (##) und H3 (###) Hierarchie ohne Sprünge
 - WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
 - WICHTIG: Integriere die Keywords "Semantik", "HTML" und "Barrierefrei" natürlich in den Text
 - WICHTIG: Beende den Artikel mit genau diesem Call-to-Action:
 
 ${cta}
 
-Antworte IMMER in diesem EXAKTEN Format mit den Markern:
-
----TITLE---
-SEO-optimierter Titel (max 60 Zeichen)
-WICHTIG für den Titel:
+Titel-Regeln:
 - Das Hauptthema/Keyword MUSS im Titel vorkommen
 - Nutze Zahlen wenn möglich (z.B. "5 Tipps", "3 Fehler")
 - Zeige den Nutzen/Benefit (z.B. "So vermeidest du...", "Warum X wichtig ist")
-- Wecke Neugier oder löse ein Problem
-- SCHLECHT: "Barrierefreies HTML: Das Fundament für Inklusion" (zu generisch)
-- GUT: "CAPTCHA barrierefrei gestalten: 5 Alternativen die funktionieren"
-- GUT: "Warum barrierefreie Formulare mehr Conversions bringen"
----DESCRIPTION---
-Meta-Description (max 155 Zeichen)
----TAGS---
-tag1, tag2, tag3
----CONTENT---
-Der vollständige Markdown-Inhalt hier...`;
+- Wecke Neugier oder löse ein Problem`;
   }
 
-  private buildUserPrompt(fetched: FetchedContent, topic?: string): string {
-    let prompt = `Erstelle einen deutschen Fachartikel basierend auf folgender Quelle:
+  private buildUserPrompt(analysis: SourceAnalysis): string {
+    return `Erstelle einen deutschen Fachartikel zum Thema: ${analysis.topic}
 
-Quelle: ${fetched.url}
-Original-Titel: ${fetched.title}
+Nutze folgende Erkenntnisse als Grundlage (NICHT kopieren, sondern neu formulieren):
 
-Inhalt der Quelle:
-${fetched.content.slice(0, 8000)}`;
+Kernpunkte:
+${analysis.keyPoints.map((p) => `- ${p}`).join('\n')}
 
-    if (topic) {
-      prompt += `\n\nFokussiere den Artikel auf das Thema: ${topic}`;
-    }
+Besondere Erkenntnisse:
+${analysis.uniqueInsights.map((p) => `- ${p}`).join('\n')}
 
-    return prompt;
-  }
+${analysis.codeExamples.length > 0 ? `Code-Patterns zur Inspiration:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
 
-  private parseResponse(text: string): GeneratedContent {
-    try {
-      const extractSection = (marker: string, nextMarker?: string): string => {
-        const startPattern = new RegExp(`---${marker}---\\s*`);
-        const startMatch = text.match(startPattern);
-        if (!startMatch) return '';
-
-        const startIndex = startMatch.index! + startMatch[0].length;
-        let endIndex = text.length;
-
-        if (nextMarker) {
-          const endPattern = new RegExp(`---${nextMarker}---`);
-          const endMatch = text.slice(startIndex).match(endPattern);
-          if (endMatch) {
-            endIndex = startIndex + endMatch.index!;
-          }
-        }
-
-        return text.slice(startIndex, endIndex).trim();
-      };
-
-      const title = extractSection('TITLE', 'DESCRIPTION') || 'Untitled';
-      const description = extractSection('DESCRIPTION', 'TAGS') || '';
-      const tagsRaw = extractSection('TAGS', 'CONTENT') || '';
-      const content = extractSection('CONTENT') || '';
-
-      const generatedTags = tagsRaw
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
-      // Always include core tags, avoid duplicates
-      const tags = [...new Set([...CORE_TAGS, ...generatedTags])];
-
-      return { title, description, content, tags };
-    } catch (error) {
-      throw new Error(`Failed to parse AI response: ${error}`);
-    }
+Schreibe einen vollständig originalen Artikel, der diese Erkenntnisse verarbeitet.`;
   }
 }
