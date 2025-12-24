@@ -1,3 +1,4 @@
+import TurndownService from 'turndown';
 import { Source } from '../domain/entities/Source';
 
 export type FetchedContent = {
@@ -7,11 +8,25 @@ export type FetchedContent = {
 };
 
 export class ContentFetcher {
+  private turndown: TurndownService;
+
+  constructor() {
+    this.turndown = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      bulletListMarker: '-',
+    });
+
+    // Remove unwanted elements
+    this.turndown.remove(['script', 'style', 'nav', 'footer', 'aside', 'noscript']);
+  }
+
   async fetch(source: Source): Promise<FetchedContent> {
     const response = await fetch(source.url, {
       headers: {
-        'User-Agent': 'NCA-Content-Bot/1.0',
-        Accept: 'text/html',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
       },
     });
 
@@ -21,7 +36,7 @@ export class ContentFetcher {
 
     const html = await response.text();
     const title = this.extractTitle(html);
-    const content = this.extractMainContent(html);
+    const content = this.htmlToMarkdown(html);
 
     return {
       title,
@@ -31,59 +46,33 @@ export class ContentFetcher {
   }
 
   private extractTitle(html: string): string {
-    const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return match?.[1]?.trim() ?? 'Untitled';
+    // Try og:title first, then title tag
+    const ogMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
+    if (ogMatch?.[1]) return ogMatch[1].trim();
+
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return titleMatch?.[1]?.trim() ?? 'Untitled';
   }
 
-  private extractMainContent(html: string): string {
-    // Remove script and style tags
-    let content = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
-      .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
-      .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
+  private htmlToMarkdown(html: string): string {
+    // Extract main content area first
+    let content = html;
 
-    // Try to find main content area
     const mainMatch =
       content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
       content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-      content.match(
-        /<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i
-      );
+      content.match(/<div[^>]*class="[^"]*(?:content|article|post|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
 
     if (mainMatch?.[1]) {
       content = mainMatch[1];
     }
 
-    // Convert to plain text
-    content = content
-      .replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level, text) => {
-        const hashes = '#'.repeat(parseInt(level));
-        return `\n${hashes} ${this.stripTags(text).trim()}\n`;
-      })
-      .replace(
-        /<p[^>]*>([\s\S]*?)<\/p>/gi,
-        (_, text) => `\n${this.stripTags(text).trim()}\n`
-      )
-      .replace(
-        /<li[^>]*>([\s\S]*?)<\/li>/gi,
-        (_, text) => `- ${this.stripTags(text).trim()}`
-      )
-      .replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`')
-      .replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, '\n```\n$1\n```\n')
-      .replace(/<[^>]+>/g, '') // Remove remaining tags
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/\n{3,}/g, '\n\n') // Normalize whitespace
+    // Convert to markdown using turndown
+    const markdown = this.turndown.turndown(content);
+
+    // Normalize whitespace
+    return markdown
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
-
-    return content;
-  }
-
-  private stripTags(html: string): string {
-    return html.replace(/<[^>]+>/g, '');
   }
 }
