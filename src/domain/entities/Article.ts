@@ -7,7 +7,6 @@ export type ArticleProps = {
   content: string;
   date: Date;
   tags: string[];
-  source: string;
   image?: string;
   imageAlt?: string;
 };
@@ -18,7 +17,6 @@ export class Article {
   readonly content: string;
   readonly date: Date;
   readonly tags: string[];
-  readonly source: string;
   readonly slug: Slug;
   readonly seoMetadata: SEOMetadata;
   readonly image?: string;
@@ -29,7 +27,6 @@ export class Article {
     this.description = props.description;
     this.date = props.date;
     this.tags = props.tags;
-    this.source = props.source;
     this.slug = new Slug(props.title);
     this.seoMetadata = new SEOMetadata(props.title, props.description);
 
@@ -66,7 +63,6 @@ export class Article {
       date: this.date.toISOString().split('T')[0],
       createdAt: this.date.toISOString(),
       tags: this.tags,
-      source: this.source,
       ...(this.image && { image: this.image }),
       ...(this.imageAlt && { imageAlt: this.imageAlt }),
     };
