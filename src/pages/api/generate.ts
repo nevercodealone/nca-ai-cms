@@ -35,7 +35,6 @@ export const POST: APIRoute = async ({ request }) => {
         content: article.content,
         filepath: article.filepath,
         tags: article.tags,
-        source: article.source,
         date: article.date.toISOString(),
       }),
       {
