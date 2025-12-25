@@ -74,23 +74,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
       <!-- Sidebar -->
       <aside class="article-sidebar">
         <div class="sidebar-card">
-          <h4 class="sidebar-title">Quelle</h4>
-          <a
-            href={article.data.source}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="source-link"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-            <span>Zur Originalquelle</span>
-          </a>
-        </div>
-
-        <div class="sidebar-card">
           <h4 class="sidebar-title">Themen</h4>
           <div class="sidebar-tags">
             {article.data.tags.map((tag) => (
@@ -468,26 +451,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     letter-spacing: var(--tracking-widest);
     color: var(--color-text-muted);
     margin-bottom: var(--space-4);
-  }
-
-  .source-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    color: var(--color-primary);
-    text-decoration: none;
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    transition: color var(--transition-fast);
-  }
-
-  .source-link:hover {
-    color: var(--color-accent);
-  }
-
-  .source-link svg {
-    flex-shrink: 0;
   }
 
   .sidebar-tags {
