@@ -67,7 +67,6 @@ export class ContentGenerator {
       content: generated.content,
       date: new Date(),
       tags: generated.tags,
-      source: sourceUrl,
     };
 
     return new Article(props);
@@ -86,7 +85,6 @@ export class ContentGenerator {
       content: generated.content,
       date: new Date(),
       tags: generated.tags,
-      source: `Recherche: ${keywords}`,
     };
 
     return new Article(props);
@@ -254,11 +252,13 @@ Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
 Zielgruppe: Content-Marketing-Professionals und Frontend-Entwickler
 Tonalität: Professionell, aber zugänglich. Technisch korrekt, nicht übermäßig akademisch.
 
-WICHTIG - Originalität:
-- Schreibe einen KOMPLETT NEUEN Artikel basierend auf den Erkenntnissen
-- Kopiere KEINE Sätze oder Formulierungen aus der Quelle
-- Der Leser darf NICHT erkennen können, welche Quelle verwendet wurde
-- Nutze die Erkenntnisse als Inspiration, formuliere alles neu und eigenständig
+KRITISCH - 100% Originalität:
+- Schreibe einen KOMPLETT EIGENSTÄNDIGEN Artikel
+- KEINE Sätze, Formulierungen oder Strukturen aus externen Quellen übernehmen
+- KEINE Hinweise auf Quellen, Referenzen oder Inspiration im Text
+- Nutze ausschließlich DEIN Expertenwissen zur Barrierefreiheit
+- Jeder Satz muss NEU formuliert sein - wie von einem Experten geschrieben
+- Der Artikel muss wirken als käme er aus eigener Fachkenntnis
 
 Regeln:
 - Schreibe auf Deutsch
@@ -280,18 +280,14 @@ Titel-Regeln:
   }
 
   private buildUserPrompt(analysis: SourceAnalysis): string {
-    return `Erstelle einen deutschen Fachartikel zum Thema: ${analysis.topic}
+    return `Schreibe als Accessibility-Experte einen deutschen Fachartikel zum Thema: ${analysis.topic}
 
-Nutze folgende Erkenntnisse als Grundlage (NICHT kopieren, sondern neu formulieren):
-
-Kernpunkte:
+Behandle diese Aspekte aus deinem Fachwissen:
 ${analysis.keyPoints.map((p) => `- ${p}`).join('\n')}
-
-Besondere Erkenntnisse:
 ${analysis.uniqueInsights.map((p) => `- ${p}`).join('\n')}
 
-${analysis.codeExamples.length > 0 ? `Code-Patterns zur Inspiration:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
+${analysis.codeExamples.length > 0 ? `Zeige praktische Code-Beispiele für:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
 
-Schreibe einen vollständig originalen Artikel, der diese Erkenntnisse verarbeitet.`;
+Wichtig: Schreibe komplett eigenständig aus deiner Expertise heraus.`;
   }
 }
