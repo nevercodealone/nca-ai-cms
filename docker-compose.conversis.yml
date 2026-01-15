@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   webserver:
     container_name: $SHORTCODE1-web
@@ -6,6 +6,12 @@ services:
     restart: unless-stopped
     networks:
       - proxy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4321', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.$SHORTCODE1.entrypoints=http"
@@ -20,11 +26,12 @@ services:
       - "traefik.http.services.$SHORTCODE1.loadbalancer.server.port=4321"
       - "traefik.docker.network=proxy"
     environment:
+      - NODE_ENV=production
       - EDITOR_ADMIN=$EDITOR_ADMIN
       - EDITOR_PASSWORD=$EDITOR_PASSWORD
       - GOOGLE_GEMINI_API_KEY=$GOOGLE_GEMINI_API_KEY
       - GOOGLE_GEMINI_MODELS=$GOOGLE_GEMINI_MODELS
-    command: sh -c "npm install && npm run dev -- --host"
+
 networks:
   proxy:
     external: true
