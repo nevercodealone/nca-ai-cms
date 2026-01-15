@@ -52,8 +52,12 @@ export class Article {
     return String(this.date.getMonth() + 1).padStart(2, '0');
   }
 
+  get folderPath(): string {
+    return `src/content/articles/${this.year}/${this.month}/${this.slug.toString()}`;
+  }
+
   get filepath(): string {
-    return `src/content/articles/${this.year}/${this.month}/${this.filename}`;
+    return `${this.folderPath}/index.md`;
   }
 
   toFrontmatter(): Record<string, unknown> {

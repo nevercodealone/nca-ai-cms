@@ -8,8 +8,6 @@ describe('Article', () => {
     content: '# HTML Accessibility\n\nContent here...',
     date: new Date('2025-12-07'),
     tags: ['accessibility', 'html'],
-    source:
-      'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML',
   };
 
   it('creates article with valid props', () => {
@@ -28,10 +26,17 @@ describe('Article', () => {
     expect(article.filename).toBe('html-accessibility-grundlagen.md');
   });
 
-  it('generates correct filepath with year and month', () => {
+  it('generates correct folderPath for co-located content', () => {
+    const article = new Article(defaultProps);
+    expect(article.folderPath).toBe(
+      'src/content/articles/2025/12/html-accessibility-grundlagen'
+    );
+  });
+
+  it('generates correct filepath with index.md', () => {
     const article = new Article(defaultProps);
     expect(article.filepath).toBe(
-      'src/content/articles/2025/12/html-accessibility-grundlagen.md'
+      'src/content/articles/2025/12/html-accessibility-grundlagen/index.md'
     );
   });
 
@@ -58,9 +63,6 @@ describe('Article', () => {
     );
     expect(frontmatter.date).toBe('2025-12-07');
     expect(frontmatter.tags).toEqual(['accessibility', 'html']);
-    expect(frontmatter.source).toBe(
-      'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML'
-    );
   });
 
   it('generates complete markdown with frontmatter', () => {
@@ -84,15 +86,27 @@ describe('Article', () => {
     expect(article.content.startsWith(`# ${longTitle}\n\n`)).toBe(true);
   });
 
-  it('includes optional image fields', () => {
+  it('includes optional image fields with relative path', () => {
     const article = new Article({
       ...defaultProps,
-      image: '/images/accessibility.webp',
+      image: './hero.webp',
       imageAlt: 'Accessibility illustration',
     });
 
     const frontmatter = article.toFrontmatter();
-    expect(frontmatter.image).toBe('/images/accessibility.webp');
+    expect(frontmatter.image).toBe('./hero.webp');
     expect(frontmatter.imageAlt).toBe('Accessibility illustration');
+  });
+
+  it('uses relative image path in markdown frontmatter', () => {
+    const article = new Article({
+      ...defaultProps,
+      image: './hero.webp',
+      imageAlt: 'Accessibility illustration',
+    });
+
+    const markdown = article.toMarkdown();
+    expect(markdown).toContain('image: "./hero.webp"');
+    expect(markdown).toContain('imageAlt: "Accessibility illustration"');
   });
 });
