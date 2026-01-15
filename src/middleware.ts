@@ -32,7 +32,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Validate cookie value
   const expectedToken = Buffer.from(
-    `${import.meta.env.EDITOR_ADMIN}:${import.meta.env.EDITOR_PASSWORD}`
+    `${process.env.EDITOR_ADMIN}:${process.env.EDITOR_PASSWORD}`
   ).toString('base64');
 
   if (authCookie.value !== expectedToken) {

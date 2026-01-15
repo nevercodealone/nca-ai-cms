@@ -4,8 +4,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const { username, password } = await request.json();
 
-    const validUser = import.meta.env.EDITOR_ADMIN;
-    const validPass = import.meta.env.EDITOR_PASSWORD;
+    const validUser = process.env.EDITOR_ADMIN;
+    const validPass = process.env.EDITOR_PASSWORD;
 
     if (username !== validUser || password !== validPass) {
       return new Response(
