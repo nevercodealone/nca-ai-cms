@@ -1,8 +1,10 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// Define articles to prevent auto-generation - but use live collection at runtime
+// This loader won't find anything since we use index.md in folders
 const articles = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/articles' }),
+  loader: glob({ pattern: '**/index.md', base: './src/content/articles' }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
