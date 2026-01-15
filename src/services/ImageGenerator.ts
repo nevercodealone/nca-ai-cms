@@ -100,9 +100,9 @@ Example for topic "Forms": barrierefreiheit-formulare-accessible-forms`;
         .trim()
         .toLowerCase()
         .replace(/[^a-z0-9-]/g, '');
-      return filename || Slug.generate(`barrierefreiheit-${topic}`);
+      return filename || Slug.generate(`barrierefreiheit-${title}`);
     } catch {
-      return Slug.generate(`barrierefreiheit-${topic}-accessibility`);
+      return Slug.generate(`barrierefreiheit-${title}-accessibility`);
     }
   }
 }

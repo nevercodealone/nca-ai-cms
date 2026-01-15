@@ -71,7 +71,7 @@ deploy_live:
     - merge_request
     - main
   when: manual
-  needs: ["build"]
+  needs: ['build']
   environment:
     name: live
     url: https://$URL

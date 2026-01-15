@@ -38,11 +38,16 @@ export const GET: APIRoute = async ({ params }) => {
           ? 'image/png'
           : 'image/jpeg';
 
+    // Get file modification time for cache busting
+    const stats = await fs.stat(fullPath);
+    const etag = `"${stats.mtimeMs.toString(36)}"`;
+
     return new Response(imageBuffer, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cache-Control': 'public, max-age=0, must-revalidate',
+        ETag: etag,
       },
     });
   } catch {

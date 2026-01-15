@@ -4,6 +4,10 @@ import { marked } from 'marked';
 import Layout from '../../layouts/Layout.astro';
 import HeroImage from '../../components/HeroImage.astro';
 
+// Check if user is authenticated
+const authCookie = Astro.cookies.get('editor-auth');
+const isAuthenticated = !!authCookie?.value;
+
 const { slug } = Astro.params;
 
 if (!slug) {
@@ -16,6 +20,9 @@ if (!article) {
   return Astro.redirect('/');
 }
 
+// Extract just the slug (last part of the ID path)
+const articleSlug = slug.split('/').pop() || slug;
+
 // Render markdown to HTML
 const htmlContent = await marked(article.body || '');
 
@@ -23,14 +30,14 @@ const htmlContent = await marked(article.body || '');
 const formattedDate = article.data.date.toLocaleDateString('de-DE', {
   year: 'numeric',
   month: 'long',
-  day: 'numeric'
+  day: 'numeric',
 });
 ---
 
 <Layout title={article.data.title}>
   <article class="article-page">
     <!-- Article Header -->
-    <header class="article-header">
+    <header class="article-header" data-article-id={articleSlug}>
       <div class="article-header-content animate-fadeInUp">
         <div class="article-meta">
           <span class="article-category">{article.data.tags[0]}</span>
@@ -40,27 +47,79 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
           </time>
         </div>
         <p class="article-lede">{article.data.description}</p>
-        {article.data.tags.length > 1 && (
-          <div class="article-tags">
-            {article.data.tags.slice(1).map((tag: string) => (
-              <span class="article-tag">{tag}</span>
-            ))}
-          </div>
-        )}
+        {
+          article.data.tags.length > 1 && (
+            <div class="article-tags">
+              {article.data.tags.slice(1).map((tag: string) => (
+                <span class="article-tag">{tag}</span>
+              ))}
+            </div>
+          )
+        }
       </div>
     </header>
 
     <!-- Hero Image -->
-    {article.data.image && (
-      <HeroImage
-        articleId={slug}
-        alt={article.data.imageAlt || article.data.title}
-      />
-    )}
+    {
+      article.data.image && (
+        <HeroImage
+          articleId={slug}
+          alt={article.data.imageAlt || article.data.title}
+          isAuthenticated={isAuthenticated}
+        />
+      )
+    }
 
     <!-- Article Body -->
     <div class="article-body">
-      <div class="article-content prose" set:html={htmlContent}>
+      <div class="content-column" data-article-id={articleSlug}>
+        {
+          isAuthenticated && (
+            <button
+              class="regenerate-text-icon"
+              type="button"
+              aria-label="Text neu generieren"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <>
+                  <path d="M23 4v6h-6" />
+                  <path d="M1 20v-6h6" />
+                </>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
+          )
+        }
+        <div class="article-content prose" set:html={htmlContent} />
+        <div class="content-preview prose" hidden></div>
+        <button
+          class="apply-text-btn"
+          type="button"
+          hidden
+          aria-label="Änderungen übernehmen"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </button>
       </div>
 
       <!-- Sidebar -->
@@ -68,9 +127,11 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
         <div class="sidebar-card">
           <h4 class="sidebar-title">Themen</h4>
           <div class="sidebar-tags">
-            {article.data.tags.map((tag: string) => (
-              <span class="sidebar-tag">{tag}</span>
-            ))}
+            {
+              article.data.tags.map((tag: string) => (
+                <span class="sidebar-tag">{tag}</span>
+              ))
+            }
           </div>
         </div>
       </aside>
@@ -79,7 +140,16 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     <!-- Article Footer -->
     <footer class="article-footer">
       <a href="/" class="back-link">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
@@ -89,7 +159,92 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
   </article>
 </Layout>
 
+<script>
+  const contentColumn = document.querySelector(
+    '.content-column'
+  ) as HTMLElement;
+  if (contentColumn) {
+    const articleId = contentColumn.dataset.articleId;
+    const regenerateBtn = contentColumn.querySelector(
+      '.regenerate-text-icon'
+    ) as HTMLButtonElement;
+    const contentDiv = contentColumn.querySelector(
+      '.article-content'
+    ) as HTMLElement;
+    const previewDiv = contentColumn.querySelector(
+      '.content-preview'
+    ) as HTMLElement;
+    const applyBtn = contentColumn.querySelector(
+      '.apply-text-btn'
+    ) as HTMLButtonElement;
+
+    let previewData: {
+      title: string;
+      description: string;
+      content: string;
+    } | null = null;
+
+    const showPreview = (html: string) => {
+      previewDiv.innerHTML = html;
+      contentDiv.hidden = true;
+      previewDiv.hidden = false;
+      applyBtn.hidden = false;
+      regenerateBtn.hidden = true;
+    };
+
+    const generateText = async () => {
+      regenerateBtn.disabled = true;
+      regenerateBtn.classList.add('loading');
+      try {
+        const res = await fetch(`/api/articles/${articleId}/regenerate-text`, {
+          method: 'POST',
+        });
+        if (!res.ok) throw new Error('Generation failed');
+        const data = await res.json();
+        previewData = {
+          title: data.title,
+          description: data.description,
+          content: data.content,
+        };
+        showPreview(
+          `<h1>${data.title}</h1><p><em>${data.description}</em></p>${data.content.replace(/^#\s+.+\n/, '')}`
+        );
+      } catch {
+        alert('Text-Generierung fehlgeschlagen');
+        regenerateBtn.disabled = false;
+        regenerateBtn.classList.remove('loading');
+      }
+    };
+
+    const applyChanges = async () => {
+      if (!previewData) return;
+      applyBtn.disabled = true;
+      applyBtn.classList.add('loading');
+      try {
+        const res = await fetch(`/api/articles/${articleId}/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(previewData),
+        });
+        if (!res.ok) throw new Error('Save failed');
+        window.location.reload();
+      } catch {
+        alert('Speichern fehlgeschlagen');
+        applyBtn.disabled = false;
+        applyBtn.classList.remove('loading');
+      }
+    };
+
+    regenerateBtn?.addEventListener('click', generateText);
+    applyBtn?.addEventListener('click', applyChanges);
+  }
+</script>
+
 <style>
+  [hidden] {
+    display: none !important;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      ARTICLE PAGE LAYOUT
      ═══════════════════════════════════════════════════════════════════════════ */
@@ -265,7 +420,9 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
-    transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+    transition:
+      color var(--transition-fast),
+      text-decoration-color var(--transition-fast);
   }
 
   .prose :global(a:hover) {
@@ -384,6 +541,79 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     height: auto;
     border-radius: var(--radius-md);
     margin: var(--space-8) 0;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     CONTENT ACTIONS (Text Regeneration)
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  .regenerate-text-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .regenerate-text-icon:hover {
+    color: var(--color-primary);
+    background: var(--color-surface-elevated);
+    border-color: var(--color-primary);
+  }
+
+  .regenerate-text-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .regenerate-text-icon.loading svg {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .apply-text-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-top: var(--space-4);
+    background: var(--color-success, #4ade80);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #000;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .apply-text-btn:hover {
+    background: #22c55e;
+  }
+
+  .apply-text-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .apply-text-btn.loading svg {
+    animation: spin 1s linear infinite;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════

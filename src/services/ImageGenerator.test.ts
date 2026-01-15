@@ -74,11 +74,8 @@ describe('ImageGenerator', () => {
       expect(result.alt).toContain('Barrierefreiheit');
     });
 
-    it('generates image with topic and title', async () => {
-      const result = await generator.generate(
-        'Forms',
-        'Barrierefreie Formulare'
-      );
+    it('generates image with title', async () => {
+      const result = await generator.generate('Barrierefreie Formulare');
 
       expect(result.alt).toContain('Barrierefreie Formulare');
     });
@@ -104,11 +101,8 @@ describe('ImageGenerator', () => {
       expect(result.alt).toContain('Keyboard and Focus');
     });
 
-    it('prefers title over topic in alt text when provided', async () => {
-      const result = await generator.generate(
-        'Forms',
-        'Formulare richtig gestalten'
-      );
+    it('uses title in alt text', async () => {
+      const result = await generator.generate('Formulare richtig gestalten');
 
       expect(result.alt).toContain('Formulare richtig gestalten');
     });

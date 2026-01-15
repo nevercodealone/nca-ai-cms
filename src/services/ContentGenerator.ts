@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { Source } from '../domain/entities/Source';
 import { Article, type ArticleProps } from '../domain/entities/Article';
 import { ContentFetcher, type FetchedContent } from './ContentFetcher';
@@ -90,32 +90,36 @@ export class ContentGenerator {
     return new Article(props);
   }
 
-  private async analyzeSource(fetched: FetchedContent): Promise<SourceAnalysis> {
+  private async analyzeSource(
+    fetched: FetchedContent
+  ): Promise<SourceAnalysis> {
     const model = this.client.getGenerativeModel({
       model: this.model,
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
             topic: {
-              type: 'string',
+              type: SchemaType.STRING,
               description: 'Das Hauptthema des Artikels in 2-5 Wörtern',
             },
             keyPoints: {
-              type: 'array',
-              items: { type: 'string' },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: 'Die wichtigsten Kernaussagen (3-5 Punkte)',
             },
             uniqueInsights: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Besondere/einzigartige Erkenntnisse oder Tipps aus dem Artikel',
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                'Besondere/einzigartige Erkenntnisse oder Tipps aus dem Artikel',
             },
             codeExamples: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Wichtige Code-Beispiele oder Patterns aus dem Artikel',
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                'Wichtige Code-Beispiele oder Patterns aus dem Artikel',
             },
           },
           required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
@@ -148,26 +152,30 @@ Identifiziere:
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
             topic: {
-              type: 'string',
-              description: 'Das Hauptthema basierend auf den Keywords in 2-5 Wörtern',
+              type: SchemaType.STRING,
+              description:
+                'Das Hauptthema basierend auf den Keywords in 2-5 Wörtern',
             },
             keyPoints: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Die wichtigsten Fakten und Best Practices zum Thema (5-7 Punkte)',
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                'Die wichtigsten Fakten und Best Practices zum Thema (5-7 Punkte)',
             },
             uniqueInsights: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Weniger bekannte aber wichtige Erkenntnisse oder Experten-Tipps',
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                'Weniger bekannte aber wichtige Erkenntnisse oder Experten-Tipps',
             },
             codeExamples: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Relevante Code-Patterns oder Beispiele für das Thema',
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                'Relevante Code-Patterns oder Beispiele für das Thema',
             },
           },
           required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
@@ -204,23 +212,23 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
             title: {
-              type: 'string',
+              type: SchemaType.STRING,
               description: 'SEO-optimierter Titel, max 60 Zeichen',
             },
             description: {
-              type: 'string',
+              type: SchemaType.STRING,
               description: 'Meta-Description, max 155 Zeichen',
             },
             tags: {
-              type: 'array',
-              items: { type: 'string' },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: 'Relevante Tags für den Artikel',
             },
             content: {
-              type: 'string',
+              type: SchemaType.STRING,
               description:
                 'Vollständiger Markdown-Inhalt. MUSS mit H1 (# Titel) beginnen, dann H2/H3 Hierarchie. Keine HTML-Tags.',
             },

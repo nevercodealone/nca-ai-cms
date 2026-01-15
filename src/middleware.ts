@@ -6,6 +6,8 @@ const PROTECTED_PATHS = [
   '/api/generate-content',
   '/api/generate-image',
   '/api/save',
+  '/api/auth-check',
+  '/api/articles',
 ];
 const PUBLIC_API = ['/api/login', '/api/logout'];
 

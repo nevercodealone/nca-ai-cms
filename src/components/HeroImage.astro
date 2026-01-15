@@ -1,18 +1,34 @@
 ---
 import { Image } from 'astro:assets';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 interface Props {
   articleId: string;
   alt: string;
+  isAuthenticated?: boolean;
 }
 
-const { articleId, alt } = Astro.props;
+const { articleId, alt, isAuthenticated } = Astro.props;
+const slug = articleId.split('/').pop() || articleId;
 
-// Construct image URL from article folder
-const imageSrc = `/api/article-image/${articleId}/hero.webp`;
+// Get file mtime for cache busting
+let mtime = '';
+try {
+  const heroPath = path.join(
+    process.cwd(),
+    'src/content/articles',
+    articleId,
+    'hero.webp'
+  );
+  const stats = await fs.stat(heroPath);
+  mtime = stats.mtimeMs.toString(36);
+} catch {}
+
+const imageSrc = `/api/article-image/${articleId}/hero.webp${mtime ? `?v=${mtime}` : ''}`;
 ---
 
-<figure class="article-hero">
+<figure class="article-hero" data-article-id={slug} data-image-src={imageSrc}>
   <div class="article-hero-image">
     <Image
       src={imageSrc}
@@ -20,14 +36,117 @@ const imageSrc = `/api/article-image/${articleId}/hero.webp`;
       width={1200}
       height={675}
       loading="eager"
+      class="hero-img"
     />
+    {
+      isAuthenticated && (
+        <>
+          <button
+            class="regenerate-btn"
+            type="button"
+            aria-label="Bild neu generieren"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M23 4v6h-6" />
+              <path d="M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
+          <button
+            class="confirm-btn"
+            type="button"
+            hidden
+            aria-label="Speichern"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        </>
+      )
+    }
   </div>
-  {alt && (
-    <figcaption class="article-hero-caption">
-      {alt}
-    </figcaption>
-  )}
+  {alt && <figcaption class="hero-caption">{alt}</figcaption>}
 </figure>
+
+<script>
+  const container = document.querySelector('.article-hero') as HTMLElement;
+  if (container) {
+    const articleId = container.dataset.articleId;
+    const img = container.querySelector('.hero-img') as HTMLImageElement;
+    const regenerateBtn = container.querySelector(
+      '.regenerate-btn'
+    ) as HTMLButtonElement;
+    const confirmBtn = container.querySelector(
+      '.confirm-btn'
+    ) as HTMLButtonElement;
+
+    let pendingImage: { url: string; alt: string } | null = null;
+
+    regenerateBtn?.addEventListener('click', async () => {
+      regenerateBtn.disabled = true;
+      regenerateBtn.classList.add('loading');
+
+      try {
+        const res = await fetch(`/api/articles/${articleId}/regenerate-image`, {
+          method: 'POST',
+        });
+        if (!res.ok) throw new Error('Failed');
+
+        const data = await res.json();
+        pendingImage = { url: data.url, alt: data.alt };
+
+        // Show preview
+        img.src = data.url;
+        regenerateBtn.hidden = true;
+        confirmBtn.hidden = false;
+      } catch {
+        alert('Bild-Generierung fehlgeschlagen');
+        regenerateBtn.disabled = false;
+        regenerateBtn.classList.remove('loading');
+      }
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+      if (!pendingImage) return;
+      confirmBtn.disabled = true;
+      confirmBtn.classList.add('loading');
+
+      try {
+        const res = await fetch(`/api/articles/${articleId}/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: pendingImage.url,
+            imageAlt: pendingImage.alt,
+          }),
+        });
+        if (!res.ok) throw new Error('Failed');
+
+        // Hard reload
+        window.location.reload();
+      } catch {
+        alert('Speichern fehlgeschlagen');
+        confirmBtn.disabled = false;
+        confirmBtn.classList.remove('loading');
+      }
+    });
+  }
+</script>
 
 <style>
   .article-hero {
@@ -35,7 +154,7 @@ const imageSrc = `/api/article-image/${articleId}/hero.webp`;
   }
 
   .article-hero-image {
-    overflow: hidden;
+    position: relative;
   }
 
   .article-hero-image img {
@@ -45,13 +164,67 @@ const imageSrc = `/api/article-image/${articleId}/hero.webp`;
     display: block;
   }
 
-  .article-hero-caption {
-    max-width: var(--content-max, 720px);
-    margin: var(--space-4, 1rem) auto 0;
-    padding: 0 var(--gutter, 1rem);
-    font-family: var(--font-body, serif);
-    font-size: var(--text-sm, 0.875rem);
+  .regenerate-btn,
+  .confirm-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .regenerate-btn {
+    background: rgba(20, 20, 22, 0.9);
+    border: 1px solid #2a2a2e;
+    color: #706d68;
+  }
+
+  .regenerate-btn:hover {
+    color: #d4a574;
+    border-color: #d4a574;
+  }
+
+  .confirm-btn {
+    background: #4ade80;
+    border: none;
+    color: #000;
+  }
+
+  .confirm-btn:hover {
+    background: #22c55e;
+  }
+
+  .regenerate-btn:disabled,
+  .confirm-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .loading svg {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .hero-caption {
+    max-width: 720px;
+    margin: 1rem auto 0;
+    padding: 0 1rem;
     font-style: italic;
-    color: var(--color-text-muted, #706d68);
+    color: #706d68;
   }
 </style>

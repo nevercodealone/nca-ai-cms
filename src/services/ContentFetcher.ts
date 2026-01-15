@@ -18,14 +18,23 @@ export class ContentFetcher {
     });
 
     // Remove unwanted elements
-    this.turndown.remove(['script', 'style', 'nav', 'footer', 'aside', 'noscript']);
+    this.turndown.remove([
+      'script',
+      'style',
+      'nav',
+      'footer',
+      'aside',
+      'noscript',
+    ]);
   }
 
   async fetch(source: Source): Promise<FetchedContent> {
     const response = await fetch(source.url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
       },
     });
@@ -47,7 +56,9 @@ export class ContentFetcher {
 
   private extractTitle(html: string): string {
     // Try og:title first, then title tag
-    const ogMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
+    const ogMatch = html.match(
+      /<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i
+    );
     if (ogMatch?.[1]) return ogMatch[1].trim();
 
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -61,7 +72,9 @@ export class ContentFetcher {
     const mainMatch =
       content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
       content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-      content.match(/<div[^>]*class="[^"]*(?:content|article|post|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+      content.match(
+        /<div[^>]*class="[^"]*(?:content|article|post|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>/i
+      );
 
     if (mainMatch?.[1]) {
       content = mainMatch[1];
@@ -71,8 +84,6 @@ export class ContentFetcher {
     const markdown = this.turndown.turndown(content);
 
     // Normalize whitespace
-    return markdown
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+    return markdown.replace(/\n{3,}/g, '\n\n').trim();
   }
 }

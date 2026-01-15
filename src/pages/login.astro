@@ -56,7 +56,17 @@ if (authCookie?.value) {
           <div id="error" class="error"></div>
           <button type="submit" class="submit-button glow-primary">
             <span class="button-text">Anmelden</span>
-            <svg class="button-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              class="button-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
@@ -65,7 +75,16 @@ if (authCookie?.value) {
 
         <footer class="login-footer">
           <a href="/" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
@@ -79,7 +98,9 @@ if (authCookie?.value) {
 
 <style>
   .login-page {
-    min-height: calc(100vh - var(--header-height) - var(--space-12) - var(--space-20));
+    min-height: calc(
+      100vh - var(--header-height) - var(--space-12) - var(--space-20)
+    );
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,7 +225,9 @@ if (authCookie?.value) {
     color: var(--color-text);
     font-family: var(--font-body);
     font-size: var(--text-base);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
   }
 
   input::placeholder {
@@ -248,7 +271,10 @@ if (authCookie?.value) {
     text-transform: uppercase;
     letter-spacing: var(--tracking-wider);
     cursor: pointer;
-    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    transition:
+      background var(--transition-fast),
+      transform var(--transition-fast),
+      box-shadow var(--transition-fast);
     box-shadow: 0 4px 20px rgba(230, 57, 70, 0.3);
   }
 
@@ -355,7 +381,8 @@ if (authCookie?.value) {
 
       window.location.href = '/editor';
     } catch (err) {
-      errorEl.textContent = err instanceof Error ? err.message : 'Login fehlgeschlagen';
+      errorEl.textContent =
+        err instanceof Error ? err.message : 'Login fehlgeschlagen';
       button.disabled = false;
       buttonText.textContent = 'Anmelden';
       buttonIcon.style.display = 'block';

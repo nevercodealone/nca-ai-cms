@@ -7,24 +7,30 @@ services:
     networks:
       - proxy
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4321', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:4321', (r) => process.exit(r.statusCode === 200 ? 0 : 1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.$SHORTCODE1.entrypoints=http"
-      - "traefik.http.routers.$SHORTCODE1.rule=Host(`$URL`)"
-      - "traefik.http.middlewares.$SHORTCODE1-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.$SHORTCODE1.middlewares=$SHORTCODE1-https-redirect"
-      - "traefik.http.routers.$SHORTCODE1-secure.entrypoints=https"
-      - "traefik.http.routers.$SHORTCODE1-secure.rule=Host(`$URL`)"
-      - "traefik.http.routers.$SHORTCODE1-secure.tls=true"
-      - "traefik.http.routers.$SHORTCODE1-secure.tls.certresolver=http"
-      - "traefik.http.routers.$SHORTCODE1-secure.service=$SHORTCODE1"
-      - "traefik.http.services.$SHORTCODE1.loadbalancer.server.port=4321"
-      - "traefik.docker.network=proxy"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.$SHORTCODE1.entrypoints=http'
+      - 'traefik.http.routers.$SHORTCODE1.rule=Host(`$URL`)'
+      - 'traefik.http.middlewares.$SHORTCODE1-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.$SHORTCODE1.middlewares=$SHORTCODE1-https-redirect'
+      - 'traefik.http.routers.$SHORTCODE1-secure.entrypoints=https'
+      - 'traefik.http.routers.$SHORTCODE1-secure.rule=Host(`$URL`)'
+      - 'traefik.http.routers.$SHORTCODE1-secure.tls=true'
+      - 'traefik.http.routers.$SHORTCODE1-secure.tls.certresolver=http'
+      - 'traefik.http.routers.$SHORTCODE1-secure.service=$SHORTCODE1'
+      - 'traefik.http.services.$SHORTCODE1.loadbalancer.server.port=4321'
+      - 'traefik.docker.network=proxy'
     environment:
       - NODE_ENV=production
       - EDITOR_ADMIN=$EDITOR_ADMIN

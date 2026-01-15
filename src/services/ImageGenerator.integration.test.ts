@@ -61,7 +61,6 @@ describe.skipIf(!apiKey)('ImageGenerator Integration', () => {
 
     it('generates image with title context', async () => {
       const result = await generator.generate(
-        'Forms',
         'Barrierefreie Webformulare gestalten'
       );
 

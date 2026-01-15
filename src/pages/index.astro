@@ -1,11 +1,30 @@
 ---
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import Layout from '../layouts/Layout.astro';
+import DeleteAction from '../components/DeleteAction.astro';
 
-// Helper to get image URL from article folder
-const getArticleImageUrl = (articleId: string) =>
-  `/api/article-image/${articleId}/hero.webp`;
+// Check if user is authenticated
+const authCookie = Astro.cookies.get('editor-auth');
+const isAuthenticated = !!authCookie?.value;
+
+// Helper to get image URL with cache busting
+const getArticleImageUrl = async (articleId: string) => {
+  let mtime = '';
+  try {
+    const heroPath = path.join(
+      process.cwd(),
+      'src/content/articles',
+      articleId,
+      'hero.webp'
+    );
+    const stats = await fs.stat(heroPath);
+    mtime = stats.mtimeMs.toString(36);
+  } catch {}
+  return `/api/article-image/${articleId}/hero.webp${mtime ? `?v=${mtime}` : ''}`;
+};
 
 const articles = await getCollection('articles');
 
@@ -14,6 +33,12 @@ const sortedArticles = (articles || []).sort((a, b) => {
   const bTime = b.data.createdAt?.getTime() ?? b.data.date.getTime();
   return bTime - aTime;
 });
+
+// Precompute image URLs with cache busting
+const imageUrls = new Map<string, string>();
+for (const article of sortedArticles) {
+  imageUrls.set(article.id, await getArticleImageUrl(article.id));
+}
 
 const featuredArticle = sortedArticles[0];
 const remainingArticles = sortedArticles.slice(1);
@@ -40,124 +65,175 @@ const remainingArticles = sortedArticles.slice(1);
   <!-- Articles Section -->
   <section class="articles-section">
     <div class="container">
-      {sortedArticles.length > 0 ? (
-        <>
-          <!-- Section Header -->
-          <header class="section-header">
-            <div class="section-header-left">
-              <span class="section-kicker">Aktuelles</span>
-              <h2 class="section-title">Artikel</h2>
-            </div>
-            <span class="article-count">{sortedArticles.length} Beiträge</span>
-          </header>
-
-          <!-- Featured Article -->
-          {featuredArticle && (
-            <a href={`/articles/${featuredArticle.id}`} class="featured-card">
-              <div class="featured-card-image img-zoom">
-                {featuredArticle.data.image ? (
-                  <Image
-                    src={getArticleImageUrl(featuredArticle.id)}
-                    alt={featuredArticle.data.imageAlt || featuredArticle.data.title}
-                    width={900}
-                    height={500}
-                    loading="eager"
-                  />
-                ) : (
-                  <div class="image-placeholder">
-                    <span>Kein Bild</span>
-                  </div>
-                )}
-                <div class="featured-card-overlay"></div>
+      {
+        sortedArticles.length > 0 ? (
+          <>
+            <header class="section-header">
+              <div class="section-header-left">
+                <span class="section-kicker">Aktuelles</span>
+                <h2 class="section-title">Artikel</h2>
               </div>
-              <div class="featured-card-content">
-                <div class="card-meta">
-                  <span class="card-tag">{featuredArticle.data.tags[0]}</span>
-                  <span class="card-date">
-                    {featuredArticle.data.date.toLocaleDateString('de-DE', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+              <span class="article-count">
+                {sortedArticles.length} Beiträge
+              </span>
+            </header>
+
+            {featuredArticle && (
+              <a href={`/articles/${featuredArticle.id}`} class="featured-card">
+                {isAuthenticated && (
+                  <DeleteAction
+                    articleId={
+                      featuredArticle.id.split('/').pop() || featuredArticle.id
+                    }
+                  />
+                )}
+                <div class="featured-card-image img-zoom">
+                  {featuredArticle.data.image ? (
+                    <Image
+                      src={imageUrls.get(featuredArticle.id)!}
+                      alt={
+                        featuredArticle.data.imageAlt ||
+                        featuredArticle.data.title
+                      }
+                      width={900}
+                      height={500}
+                      loading="eager"
+                    />
+                  ) : (
+                    <div class="image-placeholder">
+                      <span>Kein Bild</span>
+                    </div>
+                  )}
+                  <div class="featured-card-overlay" />
+                </div>
+                <div class="featured-card-content">
+                  <div class="card-meta">
+                    <span class="card-tag">{featuredArticle.data.tags[0]}</span>
+                    <span class="card-date">
+                      {featuredArticle.data.date.toLocaleDateString('de-DE', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <h3 class="featured-card-title">
+                    {featuredArticle.data.title}
+                  </h3>
+                  <p class="featured-card-excerpt">
+                    {featuredArticle.data.description}
+                  </p>
+                  <span class="read-more">
+                    Artikel lesen
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
                   </span>
                 </div>
-                <h3 class="featured-card-title">{featuredArticle.data.title}</h3>
-                <p class="featured-card-excerpt">{featuredArticle.data.description}</p>
-                <span class="read-more">
-                  Artikel lesen
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </span>
-              </div>
-            </a>
-          )}
+              </a>
+            )}
 
-          <!-- Article Grid -->
-          {remainingArticles.length > 0 && (
-            <div class="article-grid stagger-children">
-              {remainingArticles.map((article, index) => (
-                <a
-                  href={`/articles/${article.id}`}
-                  class:list={[
-                    "article-card",
-                    "hover-lift",
-                    { "article-card--wide": index % 5 === 0 }
-                  ]}
-                >
-                  <div class="article-card-image img-zoom">
-                    {article.data.image ? (
-                      <Image
-                        src={getArticleImageUrl(article.id)}
-                        alt={article.data.imageAlt || article.data.title}
-                        width={480}
-                        height={280}
-                        loading="lazy"
+            {remainingArticles.length > 0 && (
+              <div class="article-grid stagger-children">
+                {remainingArticles.map((article, index) => (
+                  <a
+                    href={`/articles/${article.id}`}
+                    class:list={[
+                      'article-card',
+                      'hover-lift',
+                      { 'article-card--wide': index % 5 === 0 },
+                    ]}
+                  >
+                    {isAuthenticated && (
+                      <DeleteAction
+                        articleId={article.id.split('/').pop() || article.id}
                       />
-                    ) : (
-                      <div class="image-placeholder">
-                        <span>Kein Bild</span>
-                      </div>
                     )}
-                  </div>
-                  <div class="article-card-content">
-                    <div class="card-meta">
-                      <span class="card-tag">{article.data.tags[0]}</span>
-                      <span class="card-date">
-                        {article.data.date.toLocaleDateString('de-DE')}
-                      </span>
+                    <div class="article-card-image img-zoom">
+                      {article.data.image ? (
+                        <Image
+                          src={imageUrls.get(article.id)!}
+                          alt={article.data.imageAlt || article.data.title}
+                          width={480}
+                          height={280}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div class="image-placeholder">
+                          <span>Kein Bild</span>
+                        </div>
+                      )}
                     </div>
-                    <h3 class="article-card-title">{article.data.title}</h3>
-                    <p class="article-card-excerpt">{article.data.description}</p>
-                  </div>
-                </a>
-              ))}
+                    <div class="article-card-content">
+                      <div class="card-meta">
+                        <span class="card-tag">{article.data.tags[0]}</span>
+                        <span class="card-date">
+                          {article.data.date.toLocaleDateString('de-DE')}
+                        </span>
+                      </div>
+                      <h3 class="article-card-title">{article.data.title}</h3>
+                      <p class="article-card-excerpt">
+                        {article.data.description}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
             </div>
-          )}
-        </>
-      ) : (
-        <div class="empty-state">
-          <div class="empty-state-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
+            <h3 class="empty-state-title">Noch keine Artikel</h3>
+            <p class="empty-state-text">
+              Erstelle deinen ersten Artikel im Editor.
+            </p>
+            <a href="/editor" class="empty-state-cta glow-primary">
+              Zum Editor
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </div>
-          <h3 class="empty-state-title">Noch keine Artikel</h3>
-          <p class="empty-state-text">Erstelle deinen ersten Artikel im Editor.</p>
-          <a href="/editor" class="empty-state-cta glow-primary">
-            Zum Editor
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </a>
-        </div>
-      )}
+        )
+      }
     </div>
   </section>
 </Layout>
@@ -289,6 +365,7 @@ const remainingArticles = sortedArticles.slice(1);
      ═══════════════════════════════════════════════════════════════════════════ */
 
   .featured-card {
+    position: relative;
     display: grid;
     grid-template-columns: 1.4fr 1fr;
     gap: 0;
@@ -414,6 +491,7 @@ const remainingArticles = sortedArticles.slice(1);
   }
 
   .article-card {
+    position: relative;
     grid-column: span 4;
     display: flex;
     flex-direction: column;
@@ -533,7 +611,9 @@ const remainingArticles = sortedArticles.slice(1);
     letter-spacing: var(--tracking-wider);
     text-decoration: none;
     border-radius: var(--radius-md);
-    transition: background var(--transition-fast), transform var(--transition-fast);
+    transition:
+      background var(--transition-fast),
+      transform var(--transition-fast);
   }
 
   .empty-state-cta:hover {
