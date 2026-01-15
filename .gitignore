@@ -24,10 +24,5 @@ coverage/
 # jetbrains setting folder
 .idea/
 
-# generated content
-src/content/articles/**/*.md
-!src/content/articles/.gitignore
-
-# generated images
-public/images/*
-!public/images/.gitignore
+# generated content (articles + co-located images)
+src/content/articles/
