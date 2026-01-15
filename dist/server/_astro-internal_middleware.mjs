@@ -27,7 +27,7 @@ const onRequest$1 = defineMiddleware(async (context, next) => {
     return context.redirect("/login");
   }
   const expectedToken = Buffer.from(
-    `${"admin"}:${"admin"}`
+    `${process.env.EDITOR_ADMIN}:${process.env.EDITOR_PASSWORD}`
   ).toString("base64");
   if (authCookie.value !== expectedToken) {
     context.cookies.delete("editor-auth");

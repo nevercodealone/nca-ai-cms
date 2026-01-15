@@ -89,8 +89,16 @@ const POST = async ({ request }) => {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const apiKey = "AIzaSyAYdGG2Ym73LOnmnrRrBquBN5u47-OteEU";
-    if (!apiKey) ;
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: "GOOGLE_GEMINI_API_KEY not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
     const generator = new ImageGenerator({ apiKey });
     const image = await generator.generate(title);
     return new Response(

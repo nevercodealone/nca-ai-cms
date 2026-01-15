@@ -11,7 +11,7 @@ const $$Login = createComponent(async ($$result, $$props, $$slots) => {
   const authCookie = Astro2.cookies.get("editor-auth");
   if (authCookie?.value) {
     const expectedToken = Buffer.from(
-      `${"admin"}:${"admin"}`
+      `${process.env.EDITOR_ADMIN}:${process.env.EDITOR_PASSWORD}`
     ).toString("base64");
     if (authCookie.value === expectedToken) {
       return Astro2.redirect("/editor");
@@ -21,6 +21,7 @@ const $$Login = createComponent(async ($$result, $$props, $$slots) => {
 Zurück zur Startseite
 </a> </footer> </div> </div> </div> ` })}  ${renderScript($$result, "/home/rolandgolla/development/nca/nca-astro-content/src/pages/login.astro?astro&type=script&index=0&lang.ts")}`;
 }, "/home/rolandgolla/development/nca/nca-astro-content/src/pages/login.astro", void 0);
+
 const $$file = "/home/rolandgolla/development/nca/nca-astro-content/src/pages/login.astro";
 const $$url = "/login";
 

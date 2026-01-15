@@ -3,8 +3,8 @@ export { renderers } from '../../renderers.mjs';
 const POST = async ({ request, cookies }) => {
   try {
     const { username, password } = await request.json();
-    const validUser = "admin";
-    const validPass = "admin";
+    const validUser = process.env.EDITOR_ADMIN;
+    const validPass = process.env.EDITOR_PASSWORD;
     if (username !== validUser || password !== validPass) {
       return new Response(
         JSON.stringify({ error: "Invalid credentials" }),
