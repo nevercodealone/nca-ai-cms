@@ -1,10 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import Layout from '../layouts/Layout.astro';
 import DeleteAction from '../components/DeleteAction.astro';
+import { ArticleService } from '../services/ArticleService';
 
 // Check if user is authenticated
 const authCookie = Astro.cookies.get('editor-auth');
@@ -26,18 +26,19 @@ const getArticleImageUrl = async (articleId: string) => {
   return `/api/article-image/${articleId}/hero.webp${mtime ? `?v=${mtime}` : ''}`;
 };
 
-const articles = await getCollection('articles');
+const service = new ArticleService();
+const articles = await service.list();
 
-const sortedArticles = (articles || []).sort((a, b) => {
-  const aTime = a.data.createdAt?.getTime() ?? a.data.date.getTime();
-  const bTime = b.data.createdAt?.getTime() ?? b.data.date.getTime();
+const sortedArticles = articles.sort((a, b) => {
+  const aTime = a.createdAt?.getTime() ?? a.date.getTime();
+  const bTime = b.createdAt?.getTime() ?? b.date.getTime();
   return bTime - aTime;
 });
 
 // Precompute image URLs with cache busting
 const imageUrls = new Map<string, string>();
 for (const article of sortedArticles) {
-  imageUrls.set(article.id, await getArticleImageUrl(article.id));
+  imageUrls.set(article.articleId, await getArticleImageUrl(article.articleId));
 }
 
 const featuredArticle = sortedArticles[0];
@@ -79,21 +80,21 @@ const remainingArticles = sortedArticles.slice(1);
             </header>
 
             {featuredArticle && (
-              <a href={`/articles/${featuredArticle.id}`} class="featured-card">
+              <a href={`/articles/${featuredArticle.articleId}`} class="featured-card">
                 {isAuthenticated && (
                   <DeleteAction
                     articleId={
-                      featuredArticle.id.split('/').pop() || featuredArticle.id
+                      featuredArticle.articleId.split('/').pop() || featuredArticle.articleId
                     }
                   />
                 )}
                 <div class="featured-card-image img-zoom">
-                  {featuredArticle.data.image ? (
+                  {featuredArticle.image ? (
                     <Image
-                      src={imageUrls.get(featuredArticle.id)!}
+                      src={imageUrls.get(featuredArticle.articleId)!}
                       alt={
-                        featuredArticle.data.imageAlt ||
-                        featuredArticle.data.title
+                        featuredArticle.imageAlt ||
+                        featuredArticle.title
                       }
                       width={900}
                       height={500}
@@ -108,9 +109,9 @@ const remainingArticles = sortedArticles.slice(1);
                 </div>
                 <div class="featured-card-content">
                   <div class="card-meta">
-                    <span class="card-tag">{featuredArticle.data.tags[0]}</span>
+                    <span class="card-tag">{featuredArticle.tags[0]}</span>
                     <span class="card-date">
-                      {featuredArticle.data.date.toLocaleDateString('de-DE', {
+                      {featuredArticle.date.toLocaleDateString('de-DE', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -118,10 +119,10 @@ const remainingArticles = sortedArticles.slice(1);
                     </span>
                   </div>
                   <h3 class="featured-card-title">
-                    {featuredArticle.data.title}
+                    {featuredArticle.title}
                   </h3>
                   <p class="featured-card-excerpt">
-                    {featuredArticle.data.description}
+                    {featuredArticle.description}
                   </p>
                   <span class="read-more">
                     Artikel lesen
@@ -147,7 +148,7 @@ const remainingArticles = sortedArticles.slice(1);
               <div class="article-grid stagger-children">
                 {remainingArticles.map((article, index) => (
                   <a
-                    href={`/articles/${article.id}`}
+                    href={`/articles/${article.articleId}`}
                     class:list={[
                       'article-card',
                       'hover-lift',
@@ -156,14 +157,14 @@ const remainingArticles = sortedArticles.slice(1);
                   >
                     {isAuthenticated && (
                       <DeleteAction
-                        articleId={article.id.split('/').pop() || article.id}
+                        articleId={article.articleId.split('/').pop() || article.articleId}
                       />
                     )}
                     <div class="article-card-image img-zoom">
-                      {article.data.image ? (
+                      {article.image ? (
                         <Image
-                          src={imageUrls.get(article.id)!}
-                          alt={article.data.imageAlt || article.data.title}
+                          src={imageUrls.get(article.articleId)!}
+                          alt={article.imageAlt || article.title}
                           width={480}
                           height={280}
                           loading="lazy"
@@ -176,14 +177,14 @@ const remainingArticles = sortedArticles.slice(1);
                     </div>
                     <div class="article-card-content">
                       <div class="card-meta">
-                        <span class="card-tag">{article.data.tags[0]}</span>
+                        <span class="card-tag">{article.tags[0]}</span>
                         <span class="card-date">
-                          {article.data.date.toLocaleDateString('de-DE')}
+                          {article.date.toLocaleDateString('de-DE')}
                         </span>
                       </div>
-                      <h3 class="article-card-title">{article.data.title}</h3>
+                      <h3 class="article-card-title">{article.title}</h3>
                       <p class="article-card-excerpt">
-                        {article.data.description}
+                        {article.description}
                       </p>
                     </div>
                   </a>

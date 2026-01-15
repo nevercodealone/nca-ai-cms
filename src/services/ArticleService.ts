@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import matter from 'gray-matter';
 import { ArticleFinder } from '../domain/value-objects/ArticleFinder';
 
@@ -14,6 +15,7 @@ export interface ArticleData {
   title: string;
   description: string;
   date: Date;
+  createdAt?: Date;
   tags: string[];
   image?: string;
   imageAlt?: string;
@@ -29,9 +31,49 @@ export interface UpdateContentOptions {
 
 export class ArticleService {
   private readonly finder: ArticleFinder;
+  private readonly basePath: string;
 
   constructor(basePath: string = 'src/content/articles') {
     this.finder = new ArticleFinder(basePath);
+    this.basePath = basePath;
+  }
+
+  async list(): Promise<ArticleData[]> {
+    const articles: ArticleData[] = [];
+    const fullBasePath = path.join(process.cwd(), this.basePath);
+
+    try {
+      const years = await fs.readdir(fullBasePath);
+
+      for (const year of years) {
+        const yearPath = path.join(fullBasePath, year);
+        const yearStat = await fs.stat(yearPath).catch(() => null);
+        if (!yearStat?.isDirectory()) continue;
+
+        const months = await fs.readdir(yearPath);
+
+        for (const month of months) {
+          const monthPath = path.join(yearPath, month);
+          const monthStat = await fs.stat(monthPath).catch(() => null);
+          if (!monthStat?.isDirectory()) continue;
+
+          const slugs = await fs.readdir(monthPath);
+
+          for (const slug of slugs) {
+            const slugPath = path.join(monthPath, slug);
+            const slugStat = await fs.stat(slugPath).catch(() => null);
+            if (!slugStat?.isDirectory()) continue;
+
+            const article = await this.read(slug);
+            if (article) articles.push(article);
+          }
+        }
+      }
+    } catch {
+      // Return empty array if base path doesn't exist
+    }
+
+    return articles;
   }
 
   async delete(slug: string): Promise<void> {
@@ -60,6 +102,7 @@ export class ArticleService {
         title: data.title,
         description: data.description,
         date: new Date(data.date),
+        createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
         tags: data.tags || [],
         image: data.image,
         imageAlt: data.imageAlt,

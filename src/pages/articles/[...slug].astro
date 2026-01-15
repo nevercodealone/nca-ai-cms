@@ -1,8 +1,8 @@
 ---
-import { getEntry } from 'astro:content';
 import { marked } from 'marked';
 import Layout from '../../layouts/Layout.astro';
 import HeroImage from '../../components/HeroImage.astro';
+import { ArticleService } from '../../services/ArticleService';
 
 // Check if user is authenticated
 const authCookie = Astro.cookies.get('editor-auth');
@@ -14,43 +14,44 @@ if (!slug) {
   return Astro.redirect('/');
 }
 
-const article = await getEntry('articles', slug);
+// Extract just the slug (last part of the path)
+const articleSlug = slug.split('/').pop() || slug;
+
+const service = new ArticleService();
+const article = await service.read(articleSlug);
 
 if (!article) {
   return Astro.redirect('/');
 }
 
-// Extract just the slug (last part of the ID path)
-const articleSlug = slug.split('/').pop() || slug;
-
 // Render markdown to HTML
-const htmlContent = await marked(article.body || '');
+const htmlContent = await marked(article.content || '');
 
 // Format the date nicely
-const formattedDate = article.data.date.toLocaleDateString('de-DE', {
+const formattedDate = article.date.toLocaleDateString('de-DE', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
 });
 ---
 
-<Layout title={article.data.title}>
+<Layout title={article.title}>
   <article class="article-page">
     <!-- Article Header -->
     <header class="article-header" data-article-id={articleSlug}>
       <div class="article-header-content animate-fadeInUp">
         <div class="article-meta">
-          <span class="article-category">{article.data.tags[0]}</span>
+          <span class="article-category">{article.tags[0]}</span>
           <span class="article-meta-divider" aria-hidden="true"></span>
-          <time datetime={article.data.date.toISOString()} class="article-date">
+          <time datetime={article.date.toISOString()} class="article-date">
             {formattedDate}
           </time>
         </div>
-        <p class="article-lede">{article.data.description}</p>
+        <p class="article-lede">{article.description}</p>
         {
-          article.data.tags.length > 1 && (
+          article.tags.length > 1 && (
             <div class="article-tags">
-              {article.data.tags.slice(1).map((tag: string) => (
+              {article.tags.slice(1).map((tag: string) => (
                 <span class="article-tag">{tag}</span>
               ))}
             </div>
@@ -61,10 +62,10 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
     <!-- Hero Image -->
     {
-      article.data.image && (
+      article.image && (
         <HeroImage
-          articleId={slug}
-          alt={article.data.imageAlt || article.data.title}
+          articleId={article.articleId}
+          alt={article.imageAlt || article.title}
           isAuthenticated={isAuthenticated}
         />
       )
@@ -124,7 +125,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
           <h4 class="sidebar-title">Themen</h4>
           <div class="sidebar-tags">
             {
-              article.data.tags.map((tag: string) => (
+              article.tags.map((tag: string) => (
                 <span class="sidebar-tag">{tag}</span>
               ))
             }
