@@ -1,5 +1,6 @@
 ---
-import { getEntry, render } from 'astro:content';
+import { getLiveEntry } from 'astro:content';
+import { marked } from 'marked';
 import Layout from '../../layouts/Layout.astro';
 
 const { slug } = Astro.params;
@@ -8,13 +9,14 @@ if (!slug) {
   return Astro.redirect('/');
 }
 
-const article = await getEntry('articles', slug);
+const { entry: article, error } = await getLiveEntry('articles', { id: slug });
 
-if (!article) {
+if (error || !article) {
   return Astro.redirect('/');
 }
 
-const { Content } = await render(article);
+// Render markdown to HTML
+const htmlContent = await marked(article.body || '');
 
 // Format the date nicely
 const formattedDate = article.data.date.toLocaleDateString('de-DE', {
@@ -67,8 +69,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
     <!-- Article Body -->
     <div class="article-body">
-      <div class="article-content prose">
-        <Content />
+      <div class="article-content prose" set:html={htmlContent}>
       </div>
 
       <!-- Sidebar -->
