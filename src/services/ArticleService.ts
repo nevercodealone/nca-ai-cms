@@ -97,18 +97,23 @@ export class ArticleService {
       const fileContent = await fs.readFile(location.indexPath, 'utf-8');
       const { data, content } = matter(fileContent);
 
-      return {
+      const result: ArticleData = {
         articleId: location.articleId,
         title: data.title,
         description: data.description,
         date: new Date(data.date),
-        createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
         tags: data.tags || [],
         image: data.image,
         imageAlt: data.imageAlt,
         content: content.trim(),
         folderPath: location.folderPath,
       };
+
+      if (data.createdAt) {
+        result.createdAt = new Date(data.createdAt);
+      }
+
+      return result;
     } catch {
       return null;
     }

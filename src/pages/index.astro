@@ -80,11 +80,15 @@ const remainingArticles = sortedArticles.slice(1);
             </header>
 
             {featuredArticle && (
-              <a href={`/articles/${featuredArticle.articleId}`} class="featured-card">
+              <a
+                href={`/articles/${featuredArticle.articleId}`}
+                class="featured-card"
+              >
                 {isAuthenticated && (
                   <DeleteAction
                     articleId={
-                      featuredArticle.articleId.split('/').pop() || featuredArticle.articleId
+                      featuredArticle.articleId.split('/').pop() ||
+                      featuredArticle.articleId
                     }
                   />
                 )}
@@ -92,10 +96,7 @@ const remainingArticles = sortedArticles.slice(1);
                   {featuredArticle.image ? (
                     <Image
                       src={imageUrls.get(featuredArticle.articleId)!}
-                      alt={
-                        featuredArticle.imageAlt ||
-                        featuredArticle.title
-                      }
+                      alt={featuredArticle.imageAlt || featuredArticle.title}
                       width={900}
                       height={500}
                       loading="eager"
@@ -118,9 +119,7 @@ const remainingArticles = sortedArticles.slice(1);
                       })}
                     </span>
                   </div>
-                  <h3 class="featured-card-title">
-                    {featuredArticle.title}
-                  </h3>
+                  <h3 class="featured-card-title">{featuredArticle.title}</h3>
                   <p class="featured-card-excerpt">
                     {featuredArticle.description}
                   </p>
@@ -157,7 +156,10 @@ const remainingArticles = sortedArticles.slice(1);
                   >
                     {isAuthenticated && (
                       <DeleteAction
-                        articleId={article.articleId.split('/').pop() || article.articleId}
+                        articleId={
+                          article.articleId.split('/').pop() ||
+                          article.articleId
+                        }
                       />
                     )}
                     <div class="article-card-image img-zoom">
@@ -183,9 +185,7 @@ const remainingArticles = sortedArticles.slice(1);
                         </span>
                       </div>
                       <h3 class="article-card-title">{article.title}</h3>
-                      <p class="article-card-excerpt">
-                        {article.description}
-                      </p>
+                      <p class="article-card-excerpt">{article.description}</p>
                     </div>
                   </a>
                 ))}
