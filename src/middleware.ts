@@ -1,6 +1,12 @@
 import { defineMiddleware } from 'astro:middleware';
+import { getEnvVariable } from './utils/envUtils';
 
-const PROTECTED_PATHS = ['/editor', '/api/generate', '/api/save'];
+const PROTECTED_PATHS = [
+  '/editor',
+  '/api/generate-content',
+  '/api/generate-image',
+  '/api/save',
+];
 const PUBLIC_API = ['/api/login', '/api/logout'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -32,7 +38,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Validate cookie value
   const expectedToken = Buffer.from(
-    `${process.env.EDITOR_ADMIN}:${process.env.EDITOR_PASSWORD}`
+    `${getEnvVariable('EDITOR_ADMIN')}:${getEnvVariable('EDITOR_PASSWORD')}`
   ).toString('base64');
 
   if (authCookie.value !== expectedToken) {
