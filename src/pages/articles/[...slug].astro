@@ -1,7 +1,8 @@
 ---
-import { getLiveEntry } from 'astro:content';
+import { getEntry } from 'astro:content';
 import { marked } from 'marked';
 import Layout from '../../layouts/Layout.astro';
+import HeroImage from '../../components/HeroImage.astro';
 
 const { slug } = Astro.params;
 
@@ -9,9 +10,9 @@ if (!slug) {
   return Astro.redirect('/');
 }
 
-const { entry: article, error } = await getLiveEntry('articles', { id: slug });
+const article = await getEntry('articles', slug);
 
-if (error || !article) {
+if (!article) {
   return Astro.redirect('/');
 }
 
@@ -51,20 +52,10 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
     <!-- Hero Image -->
     {article.data.image && (
-      <figure class="article-hero">
-        <div class="article-hero-image">
-          <img
-            src={article.data.image}
-            alt={article.data.imageAlt || article.data.title}
-            loading="eager"
-          />
-        </div>
-        {article.data.imageAlt && (
-          <figcaption class="article-hero-caption">
-            {article.data.imageAlt}
-          </figcaption>
-        )}
-      </figure>
+      <HeroImage
+        articleId={slug}
+        alt={article.data.imageAlt || article.data.title}
+      />
     )}
 
     <!-- Article Body -->
@@ -175,35 +166,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     background: var(--color-surface-elevated);
     padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-full);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     HERO IMAGE
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .article-hero {
-    margin: 0 calc(var(--gutter) * -1) var(--space-12);
-  }
-
-  .article-hero-image {
-    overflow: hidden;
-  }
-
-  .article-hero-image img {
-    width: 100%;
-    max-height: 520px;
-    object-fit: cover;
-    display: block;
-  }
-
-  .article-hero-caption {
-    max-width: var(--content-max);
-    margin: var(--space-4) auto 0;
-    padding: 0 var(--gutter);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-style: italic;
-    color: var(--color-text-muted);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
