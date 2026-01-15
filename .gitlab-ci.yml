@@ -23,15 +23,15 @@ build:
   script:
     # Backup content from old container (if exists)
     - docker cp $SHORTCODE1-web:/app/src/content/articles /tmp/articles 2>/dev/null || true
-    - docker cp $SHORTCODE1-web:/app/public/images /tmp/images 2>/dev/null || true
+    - docker cp $SHORTCODE1-web:/app/dist/client/images /tmp/images 2>/dev/null || true
     # Remove old container and start new one
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     # Restore content to new container (if backup exists)
     - docker cp /tmp/articles/. $SHORTCODE1-web:/app/src/content/articles/ 2>/dev/null || true
-    - docker cp /tmp/images/. $SHORTCODE1-web:/app/public/images/ 2>/dev/null || true
+    - docker cp /tmp/images/. $SHORTCODE1-web:/app/dist/client/images/ 2>/dev/null || true
     # Fix ownership for non-root user
-    - docker exec -u root $SHORTCODE1-web chown -R astro:nodejs /app/src/content/articles /app/public/images 2>/dev/null || true
+    - docker exec -u root $SHORTCODE1-web chown -R astro:nodejs /app/src/content/articles /app/dist/client/images 2>/dev/null || true
     # Cleanup
     - rm -rf /tmp/articles /tmp/images 2>/dev/null || true
 
