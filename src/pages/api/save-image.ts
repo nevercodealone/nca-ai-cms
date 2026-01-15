@@ -5,11 +5,11 @@ import sharp from 'sharp';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { url, filepath } = await request.json();
+    const { url, folderPath } = await request.json();
 
-    if (!url || !filepath) {
+    if (!url || !folderPath) {
       return new Response(
-        JSON.stringify({ error: 'URL and filepath are required' }),
+        JSON.stringify({ error: 'URL and folderPath are required' }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -29,7 +29,8 @@ export const POST: APIRoute = async ({ request }) => {
     const base64Data = base64Match[1];
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
-    // Ensure directory exists
+    // Save hero.webp in the article folder
+    const filepath = path.join(folderPath, 'hero.webp');
     const fullPath = path.resolve(process.cwd(), filepath);
     const dir = path.dirname(fullPath);
     await fs.mkdir(dir, { recursive: true });

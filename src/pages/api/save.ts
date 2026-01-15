@@ -12,7 +12,7 @@ export const POST: APIRoute = async ({ request }) => {
       content: data.content,
       date: new Date(data.date || Date.now()),
       tags: data.tags || [],
-      image: data.image,
+      image: './hero.webp',
       imageAlt: data.imageAlt,
     });
 
@@ -23,6 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
       JSON.stringify({
         success: true,
         filepath: result.filepath,
+        folderPath: article.folderPath,
       }),
       {
         status: 200,
