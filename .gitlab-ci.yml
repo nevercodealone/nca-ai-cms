@@ -18,18 +18,30 @@ build:
 
 .deploy:
   image: docker:latest
-  script:
+  before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv ||true
+  script:
+    # Backup content from old container (if exists)
+    - docker cp $SHORTCODE1-web:/app/src/content/articles /tmp/articles 2>/dev/null || true
+    - docker cp $SHORTCODE1-web:/app/public/images /tmp/images 2>/dev/null || true
+    # Remove old container and start new one
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    # Restore content to new container (if backup exists)
+    - docker cp /tmp/articles/. $SHORTCODE1-web:/app/src/content/articles/ 2>/dev/null || true
+    - docker cp /tmp/images/. $SHORTCODE1-web:/app/public/images/ 2>/dev/null || true
+    # Fix ownership for non-root user
+    - docker exec -u root $SHORTCODE1-web chown -R astro:nodejs /app/src/content/articles /app/public/images 2>/dev/null || true
+    # Cleanup
+    - rm -rf /tmp/articles /tmp/images 2>/dev/null || true
 
 deploy_stage:
   stage: deploy_stage
+  extends: .deploy
   tags:
     - docker2
   only:
     - main
-  extends: .deploy
   environment:
     name: stage
     url: https://$URL
@@ -39,11 +51,11 @@ deploy_stage:
 
 deploy_branch:
   stage: deploy_stage
+  extends: .deploy
   tags:
     - docker2
   except:
     - main
-  extends: .deploy
   environment:
     name: $CI_COMMIT_BRANCH
     url: https://$URL
@@ -54,6 +66,7 @@ deploy_branch:
 
 deploy_live:
   stage: deploy_live
+  extends: .deploy
   tags:
     - docker2
   only:
@@ -61,11 +74,6 @@ deploy_live:
     - main
   when: manual
   needs: ["build"]
-  image: docker:latest
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-  script:
-    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
   environment:
     name: live
     url: https://$URL
