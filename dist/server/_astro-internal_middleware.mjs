@@ -1,8 +1,8 @@
-import { d as defineMiddleware, s as sequence } from './chunks/index_BuH2jA_F.mjs';
+import { d as defineMiddleware, s as sequence } from './chunks/index_BIEgjf8V.mjs';
 import 'es-module-lexer';
-import './chunks/astro-designed-error-pages_QAAH7QOJ.mjs';
+import './chunks/astro-designed-error-pages_DjEAMErK.mjs';
 import 'piccolore';
-import './chunks/astro/server_CZVe1TcZ.mjs';
+import './chunks/astro/server_BJX1LJQr.mjs';
 import 'clsx';
 
 const PROTECTED_PATHS = ["/editor", "/api/generate", "/api/save"];

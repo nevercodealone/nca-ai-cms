@@ -1,14 +1,17 @@
-import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead, F as Fragment, d as addAttribute } from '../chunks/astro/server_CZVe1TcZ.mjs';
+import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead, F as Fragment, d as addAttribute } from '../chunks/astro/server_BJX1LJQr.mjs';
 import 'piccolore';
-import { a as getCollection } from '../chunks/_astro_content_cbkADzs9.mjs';
-import { $ as $$Image } from '../chunks/_astro_assets_BqtffkOC.mjs';
-import { $ as $$Layout } from '../chunks/Layout_2B8qVfVW.mjs';
+import { a as getLiveCollection } from '../chunks/_astro_content_CXlse_dn.mjs';
+import { $ as $$Image } from '../chunks/_astro_assets_BxRdcx6d.mjs';
+import { $ as $$Layout } from '../chunks/Layout_D1TlOTe7.mjs';
 /* empty css                                 */
 export { renderers } from '../renderers.mjs';
 
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {
-  const articles = await getCollection("articles");
-  const sortedArticles = articles.sort((a, b) => {
+  const { entries: articles, error } = await getLiveCollection("articles");
+  if (error) {
+    console.error("Failed to load articles:", error);
+  }
+  const sortedArticles = (articles || []).sort((a, b) => {
     const aTime = a.data.createdAt?.getTime() ?? a.data.date.getTime();
     const bTime = b.data.createdAt?.getTime() ?? b.data.date.getTime();
     return bTime - aTime;

@@ -1,10 +1,30 @@
-import { j as joinPaths, i as isRemotePath } from './path_CpYqPZEY.mjs';
-import { A as AstroError, ae as ExpectedImage, af as LocalImageUsedWrongly, ag as MissingImageDimension, ah as UnsupportedImageFormat, ai as IncompatibleDescriptorOptions, aj as UnsupportedImageConversion, ak as toStyleString, al as NoImageMetadata, am as FailedToFetchRemoteImageDimensions, an as ExpectedImageOptions, ao as ExpectedNotESMImage, ap as InvalidImageService, c as createComponent, a as createAstro, aq as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, ar as spreadAttributes, b as renderTemplate, as as ExperimentalFontsNotEnabled, at as FontFamilyNotFound, u as unescapeHTML } from './astro/server_CZVe1TcZ.mjs';
-import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_BmVDRGlB.mjs';
+import { j as joinPaths, i as isRemotePath } from './path_CLTPhSP2.mjs';
+import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, f as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, g as FailedToFetchRemoteImageDimensions, h as ExpectedImageOptions, i as ExpectedNotESMImage, j as InvalidImageService, c as createComponent, a as createAstro, k as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, s as spreadAttributes, b as renderTemplate, l as ExperimentalFontsNotEnabled, n as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BJX1LJQr.mjs';
 import { i as isRemoteAllowed } from './remote_DrauV6zU.mjs';
 import * as mime from 'mrmime';
 import 'clsx';
 import 'piccolore';
+
+const VALID_SUPPORTED_FORMATS = [
+  "jpeg",
+  "jpg",
+  "png",
+  "tiff",
+  "webp",
+  "gif",
+  "svg",
+  "avif"
+];
+const DEFAULT_OUTPUT_FORMAT = "webp";
+const DEFAULT_HASH_PROPS = [
+  "src",
+  "width",
+  "height",
+  "format",
+  "quality",
+  "fit",
+  "position"
+];
 
 const DEFAULT_RESOLUTIONS = [
   640,
@@ -1407,7 +1427,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_BgG1Vy0F.mjs'
+      './sharp_DKvxhnKV.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1737,15 +1757,4 @@ const assetQueryParams = undefined;
 							const outDir = /* #__PURE__ */ new URL("file:///home/rolandgolla/development/nca/nca-astro-content/dist/client/");
 							const getImage = async (options) => await getImage$1(options, imageConfig);
 
-const _astro_assets = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  Image: $$Image,
-  getConfiguredImageService,
-  getImage,
-  imageConfig,
-  inferRemoteSize,
-  isLocalService,
-  outDir
-}, Symbol.toStringTag, { value: 'Module' }));
-
-export { $$Image as $, _astro_assets as _, baseService as b, getConfiguredImageService as g, imageConfig as i, outDir as o, parseQuality as p };
+export { $$Image as $, baseService as b, getConfiguredImageService as g, imageConfig as i, outDir as o, parseQuality as p };

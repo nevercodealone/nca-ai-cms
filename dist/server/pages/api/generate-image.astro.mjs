@@ -15,7 +15,7 @@ class ImageGenerator {
   async generate(title) {
     const prompt = this.buildPrompt(title);
     const filename = await this.generateSeoFilename(title);
-    const filepath = `public/images/${filename}.webp`;
+    const filepath = `dist/client/images/${filename}.webp`;
     try {
       const response = await this.client.models.generateImages({
         model: this.model,

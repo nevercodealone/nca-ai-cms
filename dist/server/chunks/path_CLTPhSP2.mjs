@@ -124,15 +124,9 @@ function fileExtension(path) {
   const ext = path.split(".").pop();
   return ext !== path ? `.${ext}` : "";
 }
-function removeBase(path, base) {
-  if (path.startsWith(base)) {
-    return path.slice(removeTrailingForwardSlash(base).length);
-  }
-  return path;
-}
 const WITH_FILE_EXT = /\/[^/]+\.\w+$/;
 function hasFileExtension(path) {
   return WITH_FILE_EXT.test(path);
 }
 
-export { isParentDirectory as a, removeBase as b, removeTrailingForwardSlash as c, appendForwardSlash as d, isInternalPath as e, fileExtension as f, collapseDuplicateTrailingSlashes as g, hasFileExtension as h, isRemotePath as i, joinPaths as j, prependForwardSlash as p, removeQueryString as r, slash as s, trimSlashes as t };
+export { isParentDirectory as a, removeTrailingForwardSlash as b, appendForwardSlash as c, isInternalPath as d, collapseDuplicateTrailingSlashes as e, fileExtension as f, hasFileExtension as h, isRemotePath as i, joinPaths as j, prependForwardSlash as p, removeQueryString as r, slash as s, trimSlashes as t };
