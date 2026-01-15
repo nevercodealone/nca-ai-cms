@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
@@ -20,20 +21,20 @@
     "@astrojs/react": "^4.4.2",
     "@google/genai": "^1.31.0",
     "@google/generative-ai": "^0.24.1",
-    "@types/turndown": "^5.0.6",
-    "@vitest/coverage-v8": "^4.0.15",
     "astro": "^5.16.4",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "sharp": "^0.34.5",
     "turndown": "^7.2.2",
-    "vitest": "^4.0.15",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@types/turndown": "^5.0.6",
+    "@vitest/coverage-v8": "^4.0.15",
     "prettier": "^3.7.4",
     "prettier-plugin-astro": "^0.14.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   }
 }
