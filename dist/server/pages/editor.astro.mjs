@@ -1,6 +1,6 @@
-import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_BJX1LJQr.mjs';
+import { c as createComponent, r as renderComponent, b as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_CWhFJQ0n.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../chunks/Layout_D1TlOTe7.mjs';
+import { $ as $$Layout } from '../chunks/Layout_BNY3nqea.mjs';
 import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
 import { useState } from 'react';
 export { renderers } from '../renderers.mjs';
@@ -114,18 +114,8 @@ function Editor() {
     setPublishing(true);
     setError(null);
     try {
-      const imageResponse = await fetch("/api/save-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(image)
-      });
-      if (!imageResponse.ok) {
-        const data = await imageResponse.json();
-        throw new Error(data.error || "Image save failed");
-      }
       const articleData = {
         ...article,
-        image: image.filepath.replace("public", ""),
         imageAlt: image.alt
       };
       const articleResponse = await fetch("/api/save", {
@@ -136,6 +126,16 @@ function Editor() {
       if (!articleResponse.ok) {
         const data = await articleResponse.json();
         throw new Error(data.error || "Article save failed");
+      }
+      const { folderPath } = await articleResponse.json();
+      const imageResponse = await fetch("/api/save-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: image.url, folderPath })
+      });
+      if (!imageResponse.ok) {
+        const data = await imageResponse.json();
+        throw new Error(data.error || "Image save failed");
       }
       setPublished(true);
     } catch (err) {

@@ -368,11 +368,14 @@ const CspNotEnabled = {
   title: "CSP feature isn't enabled",
   message: "The `experimental.csp` configuration isn't enabled."
 };
-const LiveContentConfigError = {
-  name: "LiveContentConfigError",
-  title: "Error in live content config.",
-  message: (error, filename) => `${error} Check your collection definitions in ${filename ?? "your live content config file"}.`,
-  hint: "See https://docs.astro.build/en/reference/experimental-flags/live-content-collections/ for more information on live content collections."
+const UnknownContentCollectionError = {
+  name: "UnknownContentCollectionError",
+  title: "Unknown Content Collection Error."
+};
+const RenderUndefinedEntryError = {
+  name: "RenderUndefinedEntryError",
+  title: "Attempted to render an undefined content collection entry.",
+  hint: "Check if the entry is undefined before passing it to `render()`"
 };
 const ActionsReturnedInvalidDataError = {
   name: "ActionsReturnedInvalidDataError",
@@ -902,6 +905,13 @@ function shorthash(text) {
 const headAndContentSym = Symbol.for("astro.headAndContent");
 function isHeadAndContent(obj) {
   return typeof obj === "object" && obj !== null && !!obj[headAndContentSym];
+}
+function createHeadAndContent(head, content) {
+  return {
+    [headAndContentSym]: true,
+    head,
+    content
+  };
 }
 function createThinHead() {
   return {
@@ -2833,6 +2843,23 @@ async function renderScript(result, id) {
   return createRenderInstruction({ type: "script", id, content });
 }
 
+function renderScriptElement({ props, children }) {
+  return renderElement$1("script", {
+    props,
+    children
+  });
+}
+function renderUniqueStylesheet(result, sheet) {
+  if (sheet.type === "external") {
+    if (Array.from(result.styles).some((s) => s.props.href === sheet.src)) return "";
+    return renderElement$1("link", { props: { rel: "stylesheet", href: sheet.src }, children: "" });
+  }
+  if (sheet.type === "inline") {
+    if (Array.from(result.styles).some((s) => s.children.includes(sheet.content))) return "";
+    return renderElement$1("style", { props: {}, children: sheet.content });
+  }
+}
+
 "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_".split("").reduce((v, c) => (v[c.charCodeAt(0)] = c, v), []);
 "-0123456789_".split("").reduce((v, c) => (v[c.charCodeAt(0)] = c, v), []);
 
@@ -2853,4 +2880,4 @@ function spreadAttributes(values = {}, _name, { class: scopedClassName } = {}) {
   return markHTMLString(output);
 }
 
-export { ReservedSlotName as $, AstroError as A, responseSentSymbol as B, nodeRequestAbortControllerCleanupSymbol as C, DEFAULT_404_COMPONENT as D, ExpectedImage as E, Fragment as F, decryptString as G, createSlotValueFromString as H, IncompatibleDescriptorOptions as I, isAstroComponentFactory as J, i18nNoLocaleFoundInPath as K, LocalImageUsedWrongly as L, MissingImageDimension as M, NoImageMetadata as N, ResponseSentError as O, originPathnameSymbol as P, RewriteWithBodyUsed as Q, ROUTE_TYPE_HEADER as R, GetStaticPathsRequired as S, InvalidGetStaticPathsReturn as T, UnsupportedImageFormat as U, InvalidGetStaticPathsEntry as V, GetStaticPathsExpectedParams as W, GetStaticPathsInvalidRouteParam as X, PageNumberParamNotFound as Y, NoMatchingStaticPathFound as Z, PrerenderDynamicEndpointPathCollide as _, createAstro as a, renderSlotToString as a0, renderJSX as a1, chunkToString as a2, isRenderInstruction as a3, MiddlewareNoDataOrNextCalled as a4, MiddlewareNotAResponse as a5, SessionStorageInitError as a6, SessionStorageSaveError as a7, ForbiddenRewrite as a8, ASTRO_VERSION as a9, CspNotEnabled as aa, LocalsReassigned as ab, generateCspDigest as ac, PrerenderClientAddressNotAvailable as ad, ClientAddressNotAvailable as ae, StaticClientAddressNotAvailable as af, AstroResponseHeadersReassigned as ag, renderPage as ah, REWRITE_DIRECTIVE_HEADER_KEY as ai, REWRITE_DIRECTIVE_HEADER_VALUE as aj, renderEndpoint as ak, NOOP_MIDDLEWARE_HEADER as al, REDIRECT_STATUS_CODES as am, ActionsReturnedInvalidDataError as an, MissingSharp as ao, LiveContentConfigError as ap, renderTemplate as b, createComponent as c, addAttribute as d, renderScript as e, UnsupportedImageConversion as f, FailedToFetchRemoteImageDimensions as g, ExpectedImageOptions as h, ExpectedNotESMImage as i, InvalidImageService as j, ImageMissingAlt as k, ExperimentalFontsNotEnabled as l, maybeRenderHead as m, FontFamilyNotFound as n, renderHead as o, renderSlot as p, decodeKey as q, renderComponent as r, spreadAttributes as s, toStyleString as t, unescapeHTML as u, REROUTE_DIRECTIVE_HEADER as v, ActionNotFoundError as w, clientAddressSymbol as x, LocalsNotAnObject as y, REROUTABLE_STATUS_CODES as z };
+export { GetStaticPathsExpectedParams as $, AstroError as A, REROUTE_DIRECTIVE_HEADER as B, ActionNotFoundError as C, DEFAULT_404_COMPONENT as D, ExpectedImage as E, Fragment as F, clientAddressSymbol as G, LocalsNotAnObject as H, IncompatibleDescriptorOptions as I, REROUTABLE_STATUS_CODES as J, responseSentSymbol as K, LocalImageUsedWrongly as L, MissingImageDimension as M, NoImageMetadata as N, nodeRequestAbortControllerCleanupSymbol as O, decryptString as P, createSlotValueFromString as Q, RenderUndefinedEntryError as R, isAstroComponentFactory as S, i18nNoLocaleFoundInPath as T, UnknownContentCollectionError as U, ResponseSentError as V, originPathnameSymbol as W, RewriteWithBodyUsed as X, GetStaticPathsRequired as Y, InvalidGetStaticPathsReturn as Z, InvalidGetStaticPathsEntry as _, createAstro as a, GetStaticPathsInvalidRouteParam as a0, PageNumberParamNotFound as a1, NoMatchingStaticPathFound as a2, PrerenderDynamicEndpointPathCollide as a3, ReservedSlotName as a4, renderSlotToString as a5, renderJSX as a6, chunkToString as a7, isRenderInstruction as a8, MiddlewareNoDataOrNextCalled as a9, MiddlewareNotAResponse as aa, SessionStorageInitError as ab, SessionStorageSaveError as ac, ForbiddenRewrite as ad, ASTRO_VERSION as ae, CspNotEnabled as af, LocalsReassigned as ag, generateCspDigest as ah, PrerenderClientAddressNotAvailable as ai, ClientAddressNotAvailable as aj, StaticClientAddressNotAvailable as ak, AstroResponseHeadersReassigned as al, renderPage as am, REWRITE_DIRECTIVE_HEADER_KEY as an, REWRITE_DIRECTIVE_HEADER_VALUE as ao, renderEndpoint as ap, NOOP_MIDDLEWARE_HEADER as aq, REDIRECT_STATUS_CODES as ar, ActionsReturnedInvalidDataError as as, MissingSharp as at, renderTemplate as b, createComponent as c, addAttribute as d, renderScript as e, renderUniqueStylesheet as f, renderScriptElement as g, createHeadAndContent as h, UnsupportedImageFormat as i, UnsupportedImageConversion as j, FailedToFetchRemoteImageDimensions as k, ExpectedImageOptions as l, maybeRenderHead as m, ExpectedNotESMImage as n, InvalidImageService as o, ImageMissingAlt as p, ExperimentalFontsNotEnabled as q, renderComponent as r, spreadAttributes as s, toStyleString as t, unescapeHTML as u, FontFamilyNotFound as v, renderHead as w, renderSlot as x, decodeKey as y, ROUTE_TYPE_HEADER as z };

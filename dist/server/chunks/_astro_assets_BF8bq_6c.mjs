@@ -1,10 +1,20 @@
-import { j as joinPaths, i as isRemotePath } from './path_CLTPhSP2.mjs';
-import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, f as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, g as FailedToFetchRemoteImageDimensions, h as ExpectedImageOptions, i as ExpectedNotESMImage, j as InvalidImageService, c as createComponent, a as createAstro, k as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, s as spreadAttributes, b as renderTemplate, l as ExperimentalFontsNotEnabled, n as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BJX1LJQr.mjs';
+import { j as joinPaths, i as isRemotePath } from './path_CpYqPZEY.mjs';
+import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, i as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, j as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, k as FailedToFetchRemoteImageDimensions, l as ExpectedImageOptions, n as ExpectedNotESMImage, o as InvalidImageService, c as createComponent, a as createAstro, p as ImageMissingAlt, m as maybeRenderHead, d as addAttribute, s as spreadAttributes, b as renderTemplate, q as ExperimentalFontsNotEnabled, v as FontFamilyNotFound, u as unescapeHTML } from './astro/server_CWhFJQ0n.mjs';
 import { i as isRemoteAllowed } from './remote_DrauV6zU.mjs';
 import * as mime from 'mrmime';
 import 'clsx';
 import 'piccolore';
 
+const VALID_INPUT_FORMATS = [
+  "jpeg",
+  "jpg",
+  "png",
+  "tiff",
+  "webp",
+  "gif",
+  "svg",
+  "avif"
+];
 const VALID_SUPPORTED_FORMATS = [
   "jpeg",
   "jpg",
@@ -1427,7 +1437,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_DKvxhnKV.mjs'
+      './sharp_Cx9w39Yb.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1757,4 +1767,15 @@ const assetQueryParams = undefined;
 							const outDir = /* #__PURE__ */ new URL("file:///home/rolandgolla/development/nca/nca-astro-content/dist/client/");
 							const getImage = async (options) => await getImage$1(options, imageConfig);
 
-export { $$Image as $, baseService as b, getConfiguredImageService as g, imageConfig as i, outDir as o, parseQuality as p };
+const _astro_assets = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  Image: $$Image,
+  getConfiguredImageService,
+  getImage,
+  imageConfig,
+  inferRemoteSize,
+  isLocalService,
+  outDir
+}, Symbol.toStringTag, { value: 'Module' }));
+
+export { $$Image as $, VALID_INPUT_FORMATS as V, _astro_assets as _, baseService as b, getConfiguredImageService as g, imageConfig as i, outDir as o, parseQuality as p };

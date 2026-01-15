@@ -45,8 +45,11 @@ class Article {
   get month() {
     return String(this.date.getMonth() + 1).padStart(2, "0");
   }
+  get folderPath() {
+    return `src/content/articles/${this.year}/${this.month}/${this.slug.toString()}`;
+  }
   get filepath() {
-    return `src/content/articles/${this.year}/${this.month}/${this.filename}`;
+    return `${this.folderPath}/index.md`;
   }
   toFrontmatter() {
     return {

@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { A as Article } from '../../chunks/Article_dOm2z5B6.mjs';
+import { A as Article } from '../../chunks/Article_DJYSGhDI.mjs';
 import TurndownService from 'turndown';
 export { renderers } from '../../renderers.mjs';
 

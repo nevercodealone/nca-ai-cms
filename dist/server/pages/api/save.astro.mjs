@@ -1,4 +1,4 @@
-import { A as Article } from '../../chunks/Article_dOm2z5B6.mjs';
+import { A as Article } from '../../chunks/Article_DJYSGhDI.mjs';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 export { renderers } from '../../renderers.mjs';
@@ -51,7 +51,7 @@ const POST = async ({ request }) => {
       content: data.content,
       date: new Date(data.date || Date.now()),
       tags: data.tags || [],
-      image: data.image,
+      image: "./hero.webp",
       imageAlt: data.imageAlt
     });
     const writer = new FileWriter();
@@ -59,7 +59,8 @@ const POST = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        filepath: result.filepath
+        filepath: result.filepath,
+        folderPath: article.folderPath
       }),
       {
         status: 200,
