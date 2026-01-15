@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { ImageGenerator } from '../../services/ImageGenerator';
+import { getEnvVariable } from '../../utils/envUtils';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -12,17 +13,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'GOOGLE_GEMINI_API_KEY not configured' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
+    const apiKey = getEnvVariable('GOOGLE_GEMINI_API_KEY');
     const generator = new ImageGenerator({ apiKey });
     const image = await generator.generate(title);
 

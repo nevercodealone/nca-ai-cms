@@ -1,28 +1,22 @@
 import type { APIRoute } from 'astro';
 import { ContentGenerator } from '../../services/ContentGenerator';
+import { getEnvVariable } from '../../utils/envUtils';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { url, keywords } = await request.json();
 
     if (!url && !keywords) {
-      return new Response(JSON.stringify({ error: 'URL or keywords required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'GOOGLE_GEMINI_API_KEY not configured' }),
+        JSON.stringify({ error: 'URL or keywords required' }),
         {
-          status: 500,
+          status: 400,
           headers: { 'Content-Type': 'application/json' },
         }
       );
     }
 
+    const apiKey = getEnvVariable('GOOGLE_GEMINI_API_KEY');
     const generator = new ContentGenerator({ apiKey });
     const article = url
       ? await generator.generateFromUrl(url)

@@ -52,7 +52,7 @@ export default function Editor() {
 
   const generateText = async (): Promise<GeneratedArticle | null> => {
     const type = getInputType();
-    const response = await fetch('/api/generate', {
+    const response = await fetch('/api/generate-content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(
@@ -149,22 +149,9 @@ export default function Editor() {
     setError(null);
 
     try {
-      // 1. Save image first
-      const imageResponse = await fetch('/api/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(image),
-      });
-
-      if (!imageResponse.ok) {
-        const data = await imageResponse.json();
-        throw new Error(data.error || 'Image save failed');
-      }
-
-      // 2. Save article with image reference
+      // 1. Save article first to create folder and get folderPath
       const articleData = {
         ...article,
-        image: image.filepath.replace('public', ''),
         imageAlt: image.alt,
       };
 
@@ -177,6 +164,20 @@ export default function Editor() {
       if (!articleResponse.ok) {
         const data = await articleResponse.json();
         throw new Error(data.error || 'Article save failed');
+      }
+
+      const { folderPath } = await articleResponse.json();
+
+      // 2. Save image to the article folder as hero.webp
+      const imageResponse = await fetch('/api/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: image.url, folderPath }),
+      });
+
+      if (!imageResponse.ok) {
+        const data = await imageResponse.json();
+        throw new Error(data.error || 'Image save failed');
       }
 
       setPublished(true);
