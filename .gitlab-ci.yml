@@ -30,6 +30,8 @@ deploy_stage:
   only:
     - main
   extends: .deploy
+  script:
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
   environment:
     name: stage
     url: https://$URL
