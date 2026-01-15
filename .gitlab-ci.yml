@@ -30,6 +30,8 @@ build:
     - docker cp /tmp/articles/. $SHORTCODE1-web:/app/src/content/articles/ 2>/dev/null || true
     # Fix ownership for non-root user
     - docker exec -u root $SHORTCODE1-web chown -R astro:nodejs /app/src/content/articles 2>/dev/null || true
+    # Rebuild to pick up restored articles
+    - docker exec $SHORTCODE1-web npm run build
     # Cleanup
     - rm -rf /tmp/articles 2>/dev/null || true
 
