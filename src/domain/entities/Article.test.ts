@@ -74,7 +74,7 @@ describe('Article', () => {
     expect(markdown).toContain('# HTML Accessibility');
   });
 
-  it('prepends full title as H1 to content when title exceeds 60 chars', () => {
+  it('truncates SEO title to 60 chars when title exceeds limit', () => {
     const longTitle = 'A'.repeat(67);
     const article = new Article({
       ...defaultProps,
@@ -83,7 +83,7 @@ describe('Article', () => {
 
     expect(article.seoMetadata.title.length).toBe(60);
     expect(article.seoMetadata.title.endsWith('...')).toBe(true);
-    expect(article.content.startsWith(`# ${longTitle}\n\n`)).toBe(true);
+    expect(article.title).toBe(longTitle); // Full title preserved
   });
 
   it('includes optional image fields with relative path', () => {

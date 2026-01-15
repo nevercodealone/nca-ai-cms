@@ -80,11 +80,11 @@ describe('ImageGenerator', () => {
       expect(result.alt).toContain('Barrierefreie Formulare');
     });
 
-    it('returns filepath with .png extension', async () => {
+    it('returns filepath with .webp extension', async () => {
       const result = await generator.generate('Images');
 
-      expect(result.filepath).toMatch(/\.png$/);
-      expect(result.filepath).toMatch(/^public\/images\//);
+      expect(result.filepath).toMatch(/\.webp$/);
+      expect(result.filepath).toMatch(/^dist\/client\/images\//);
     });
 
     it('generates SEO-friendly filename via AI', async () => {
