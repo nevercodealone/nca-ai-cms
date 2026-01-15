@@ -5,6 +5,8 @@ interface Props {
 
 const { title } = Astro.props;
 const currentPath = Astro.url.pathname;
+const authCookie = Astro.cookies.get('editor-auth');
+const isAuthenticated = !!authCookie?.value;
 ---
 
 <!doctype html>
@@ -134,15 +136,15 @@ const currentPath = Astro.url.pathname;
         --space-32: 8rem; /* 128px */
 
         /* ─────────────────────────────────────────────────────────────────────────
-           LAYOUT
+           LAYOUT - Fluid responsive system
            ───────────────────────────────────────────────────────────────────────── */
 
-        --container-max: 1400px;
-        --content-max: 780px;
-        --sidebar-width: 300px;
+        --container-max: 1200px;
+        --content-max: 720px;
+        --sidebar-width: 280px;
         --header-height: 72px;
-        --gutter: var(--space-6);
-        --gutter-lg: var(--space-10);
+        /* Fluid gutter: 16px at 320px viewport, scales to 48px at 1200px+ */
+        --gutter: clamp(1rem, 4vw, 3rem);
 
         /* ─────────────────────────────────────────────────────────────────────────
            EFFECTS
@@ -227,6 +229,19 @@ const currentPath = Astro.url.pathname;
         text-rendering: optimizeLegibility;
         min-height: 100vh;
         overflow-x: hidden;
+      }
+
+      /* Text wrapping for long words */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        hyphens: auto;
       }
 
       /* Editorial text selection */
@@ -575,16 +590,34 @@ const currentPath = Astro.url.pathname;
          RESPONSIVE ADJUSTMENTS
          ═══════════════════════════════════════════════════════════════════════════ */
 
+      /* Logout Button */
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        color: var(--color-text-muted);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+      }
+
+      .logout-btn:hover {
+        color: var(--color-error);
+        border-color: var(--color-error);
+        background: var(--color-error-muted);
+      }
+
+      /* Tablet */
       @media (max-width: 768px) {
         :root {
           --header-height: 64px;
-          --gutter: var(--space-4);
         }
 
-        .logo-tagline {
-          display: none;
-        }
-
+        .logo-tagline,
         .logo-divider {
           display: none;
         }
@@ -595,6 +628,27 @@ const currentPath = Astro.url.pathname;
 
         .nav-link {
           font-size: var(--text-xs);
+        }
+      }
+
+      /* Mobile */
+      @media (max-width: 480px) {
+        .main-nav {
+          gap: var(--space-3);
+        }
+
+        .nav-link {
+          letter-spacing: var(--tracking-normal);
+        }
+
+        .logout-btn {
+          width: 32px;
+          height: 32px;
+        }
+
+        .logout-btn svg {
+          width: 16px;
+          height: 16px;
         }
       }
     </style>
@@ -624,11 +678,36 @@ const currentPath = Astro.url.pathname;
           >
             Editor
           </a>
+          {
+            isAuthenticated && (
+              <button class="logout-btn" type="button" aria-label="Abmelden">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            )
+          }
         </nav>
       </div>
     </header>
     <main class="site-main">
       <slot />
     </main>
+    <script>
+      const logoutBtn = document.querySelector('.logout-btn');
+      logoutBtn?.addEventListener('click', async () => {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login';
+      });
+    </script>
   </body>
 </html>

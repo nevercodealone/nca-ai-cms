@@ -325,9 +325,14 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
   .article-body {
     display: grid;
-    grid-template-columns: 1fr 280px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: var(--space-16);
     max-width: 1100px;
+  }
+
+  .content-column {
+    min-width: 0;
+    overflow: hidden;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -339,6 +344,9 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     font-size: var(--text-lg);
     line-height: var(--leading-loose);
     color: var(--color-text-accent);
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   /* Drop Cap - First letter of first paragraph */
@@ -467,6 +475,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     padding: var(--space-6);
     margin: var(--space-8) 0;
     overflow-x: auto;
+    max-width: 100%;
   }
 
   .prose :global(pre code) {
@@ -475,6 +484,8 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     color: var(--color-text-accent);
     font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
+    white-space: pre;
+    display: block;
   }
 
   /* Blockquotes */
@@ -719,6 +730,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     }
   }
 
+  /* Tablet */
   @media (max-width: 768px) {
     .article-header {
       padding: var(--space-10) 0 var(--space-8);
@@ -750,6 +762,60 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
 
     .sidebar-card {
       min-width: 100%;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    .article-header {
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .article-meta {
+      gap: var(--space-2);
+    }
+
+    .article-meta-divider {
+      width: 16px;
+    }
+
+    .article-lede {
+      font-size: var(--text-base);
+    }
+
+    .prose :global(> p:first-of-type::first-letter) {
+      font-size: 3em;
+      padding-right: var(--space-2);
+    }
+
+    .prose :global(h1) {
+      font-size: var(--text-2xl);
+    }
+
+    .prose :global(h2) {
+      font-size: var(--text-xl);
+      margin-top: var(--space-10);
+    }
+
+    .prose :global(h3) {
+      font-size: var(--text-lg);
+    }
+
+    .prose :global(blockquote) {
+      padding: var(--space-4) var(--space-5);
+    }
+
+    .prose :global(blockquote p) {
+      font-size: var(--text-lg);
+    }
+
+    .sidebar-card {
+      padding: var(--space-4);
+    }
+
+    .article-footer {
+      margin-top: var(--space-10);
+      padding: var(--space-6) 0 var(--space-12);
     }
   }
 </style>
