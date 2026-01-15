@@ -39,7 +39,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
         <p class="article-lede">{article.data.description}</p>
         {article.data.tags.length > 1 && (
           <div class="article-tags">
-            {article.data.tags.slice(1).map((tag) => (
+            {article.data.tags.slice(1).map((tag: string) => (
               <span class="article-tag">{tag}</span>
             ))}
           </div>
@@ -76,7 +76,7 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
         <div class="sidebar-card">
           <h4 class="sidebar-title">Themen</h4>
           <div class="sidebar-tags">
-            {article.data.tags.map((tag) => (
+            {article.data.tags.map((tag: string) => (
               <span class="sidebar-tag">{tag}</span>
             ))}
           </div>
