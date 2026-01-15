@@ -12,7 +12,6 @@ export const POST: APIRoute = async ({ request }) => {
       content: data.content,
       date: new Date(data.date || Date.now()),
       tags: data.tags || [],
-      source: data.source,
       image: data.image,
       imageAlt: data.imageAlt,
     });
