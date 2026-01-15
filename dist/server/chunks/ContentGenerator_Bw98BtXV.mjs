@@ -1,7 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { A as Article } from '../../chunks/Article_DJYSGhDI.mjs';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { A as Article } from './Article_DJYSGhDI.mjs';
 import TurndownService from 'turndown';
-export { renderers } from '../../renderers.mjs';
 
 class Source {
   url;
@@ -47,13 +46,20 @@ class ContentFetcher {
       codeBlockStyle: "fenced",
       bulletListMarker: "-"
     });
-    this.turndown.remove(["script", "style", "nav", "footer", "aside", "noscript"]);
+    this.turndown.remove([
+      "script",
+      "style",
+      "nav",
+      "footer",
+      "aside",
+      "noscript"
+    ]);
   }
   async fetch(source) {
     const response = await fetch(source.url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
       }
     });
@@ -70,14 +76,18 @@ class ContentFetcher {
     };
   }
   extractTitle(html) {
-    const ogMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
+    const ogMatch = html.match(
+      /<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i
+    );
     if (ogMatch?.[1]) return ogMatch[1].trim();
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     return titleMatch?.[1]?.trim() ?? "Untitled";
   }
   htmlToMarkdown(html) {
     let content = html;
-    const mainMatch = content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) || content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) || content.match(/<div[^>]*class="[^"]*(?:content|article|post|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    const mainMatch = content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) || content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) || content.match(
+      /<div[^>]*class="[^"]*(?:content|article|post|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>/i
+    );
     if (mainMatch?.[1]) {
       content = mainMatch[1];
     }
@@ -141,25 +151,25 @@ class ContentGenerator {
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "object",
+          type: SchemaType.OBJECT,
           properties: {
             topic: {
-              type: "string",
+              type: SchemaType.STRING,
               description: "Das Hauptthema des Artikels in 2-5 Wörtern"
             },
             keyPoints: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Die wichtigsten Kernaussagen (3-5 Punkte)"
             },
             uniqueInsights: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Besondere/einzigartige Erkenntnisse oder Tipps aus dem Artikel"
             },
             codeExamples: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Wichtige Code-Beispiele oder Patterns aus dem Artikel"
             }
           },
@@ -190,25 +200,25 @@ Identifiziere:
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "object",
+          type: SchemaType.OBJECT,
           properties: {
             topic: {
-              type: "string",
+              type: SchemaType.STRING,
               description: "Das Hauptthema basierend auf den Keywords in 2-5 Wörtern"
             },
             keyPoints: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Die wichtigsten Fakten und Best Practices zum Thema (5-7 Punkte)"
             },
             uniqueInsights: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Weniger bekannte aber wichtige Erkenntnisse oder Experten-Tipps"
             },
             codeExamples: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Relevante Code-Patterns oder Beispiele für das Thema"
             }
           },
@@ -240,23 +250,23 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "object",
+          type: SchemaType.OBJECT,
           properties: {
             title: {
-              type: "string",
+              type: SchemaType.STRING,
               description: "SEO-optimierter Titel, max 60 Zeichen"
             },
             description: {
-              type: "string",
+              type: SchemaType.STRING,
               description: "Meta-Description, max 155 Zeichen"
             },
             tags: {
-              type: "array",
-              items: { type: "string" },
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
               description: "Relevante Tags für den Artikel"
             },
             content: {
-              type: "string",
+              type: SchemaType.STRING,
               description: "Vollständiger Markdown-Inhalt. MUSS mit H1 (# Titel) beginnen, dann H2/H3 Hierarchie. Keine HTML-Tags."
             }
           },
@@ -323,60 +333,4 @@ Wichtig: Schreibe komplett eigenständig aus deiner Expertise heraus.`;
   }
 }
 
-const POST = async ({ request }) => {
-  try {
-    const { url, keywords } = await request.json();
-    if (!url && !keywords) {
-      return new Response(JSON.stringify({ error: "URL or keywords required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "GOOGLE_GEMINI_API_KEY not configured" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-    }
-    const generator = new ContentGenerator({ apiKey });
-    const article = url ? await generator.generateFromUrl(url) : await generator.generateFromKeywords(keywords);
-    return new Response(
-      JSON.stringify({
-        title: article.title,
-        description: article.description,
-        content: article.content,
-        filepath: article.filepath,
-        tags: article.tags,
-        date: article.date.toISOString()
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
-  } catch (error) {
-    console.error("Generation error:", error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Generation failed"
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
-  }
-};
-
-const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  POST
-}, Symbol.toStringTag, { value: 'Module' }));
-
-const page = () => _page;
-
-export { page };
+export { ContentGenerator as C };

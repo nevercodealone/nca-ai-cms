@@ -24,11 +24,14 @@ const GET = async ({ params }) => {
   try {
     const imageBuffer = await fs.readFile(fullPath);
     const contentType = ext === ".webp" ? "image/webp" : ext === ".png" ? "image/png" : "image/jpeg";
+    const stats = await fs.stat(fullPath);
+    const etag = `"${stats.mtimeMs.toString(36)}"`;
     return new Response(imageBuffer, {
       status: 200,
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=31536000, immutable"
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        ETag: etag
       }
     });
   } catch {

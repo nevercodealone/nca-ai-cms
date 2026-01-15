@@ -1,11 +1,19 @@
-import { d as defineMiddleware, s as sequence } from './chunks/index_BBPjQtRf.mjs';
+import { d as defineMiddleware, s as sequence } from './chunks/index_DR_SzSbF.mjs';
+import { g as getEnvVariable } from './chunks/envUtils_iwYjdmOK.mjs';
 import 'es-module-lexer';
-import './chunks/astro-designed-error-pages_BatojL7e.mjs';
+import './chunks/astro-designed-error-pages_C3xpdfNH.mjs';
 import 'piccolore';
-import './chunks/astro/server_CWhFJQ0n.mjs';
+import './chunks/astro/server_CT8QpgxF.mjs';
 import 'clsx';
 
-const PROTECTED_PATHS = ["/editor", "/api/generate", "/api/save"];
+const PROTECTED_PATHS = [
+  "/editor",
+  "/api/generate-content",
+  "/api/generate-image",
+  "/api/save",
+  "/api/auth-check",
+  "/api/articles"
+];
 const PUBLIC_API = ["/api/login", "/api/logout"];
 const onRequest$1 = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
@@ -27,7 +35,7 @@ const onRequest$1 = defineMiddleware(async (context, next) => {
     return context.redirect("/login");
   }
   const expectedToken = Buffer.from(
-    `${process.env.EDITOR_ADMIN}:${process.env.EDITOR_PASSWORD}`
+    `${getEnvVariable("EDITOR_ADMIN")}:${getEnvVariable("EDITOR_PASSWORD")}`
   ).toString("base64");
   if (authCookie.value !== expectedToken) {
     context.cookies.delete("editor-auth");

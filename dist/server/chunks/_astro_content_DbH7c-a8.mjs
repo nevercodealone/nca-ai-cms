@@ -3,8 +3,8 @@ import { Traverse } from 'neotraverse/modern';
 import pLimit from 'p-limit';
 import { z } from 'zod';
 import { b as removeBase, i as isRemotePath, p as prependForwardSlash } from './path_CpYqPZEY.mjs';
-import { V as VALID_INPUT_FORMATS } from './_astro_assets_BF8bq_6c.mjs';
-import { A as AstroError, U as UnknownContentCollectionError, c as createComponent, R as RenderUndefinedEntryError, u as unescapeHTML, b as renderTemplate, f as renderUniqueStylesheet, g as renderScriptElement, h as createHeadAndContent, r as renderComponent } from './astro/server_CWhFJQ0n.mjs';
+import { V as VALID_INPUT_FORMATS } from './_astro_assets_C3eQMTmc.mjs';
+import { A as AstroError, U as UnknownContentCollectionError, c as createComponent, R as RenderUndefinedEntryError, u as unescapeHTML, e as renderTemplate, f as renderUniqueStylesheet, g as renderScriptElement, h as createHeadAndContent, r as renderComponent } from './astro/server_CT8QpgxF.mjs';
 import 'piccolore';
 import * as devalue from 'devalue';
 
@@ -66,7 +66,7 @@ class ImmutableDataStore {
    */
   static async fromModule() {
     try {
-      const data = await import('./_astro_data-layer-content_BHNqqMUx.mjs');
+      const data = await import('./_astro_data-layer-content_QCPCuwJg.mjs');
       if (data.default instanceof Map) {
         return ImmutableDataStore.fromMap(data.default);
       }
@@ -307,7 +307,7 @@ const CONTENT_LAYER_IMAGE_REGEX = /__ASTRO_IMAGE_="([^"]+)"/g;
 async function updateImageReferencesInBody(html, fileName) {
   const { default: imageAssetMap } = await import('./content-assets_DleWbedO.mjs');
   const imageObjects = /* @__PURE__ */ new Map();
-  const { getImage } = await import('./_astro_assets_BF8bq_6c.mjs').then(n => n._);
+  const { getImage } = await import('./_astro_assets_C3eQMTmc.mjs').then(n => n._);
   for (const [_full, imagePath] of html.matchAll(CONTENT_LAYER_IMAGE_REGEX)) {
     try {
       const decodedImagePath = JSON.parse(imagePath.replaceAll("&#x22;", '"'));
