@@ -75,51 +75,47 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
       <div class="content-column" data-article-id={articleSlug}>
         {
           isAuthenticated && (
-            <button
-              class="regenerate-text-icon"
-              type="button"
-              aria-label="Text neu generieren"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            <div class="content-actions">
+              <button
+                class="regenerate-text-icon"
+                type="button"
+                aria-label="Text neu generieren"
               >
-                <>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M23 4v6h-6" />
                   <path d="M1 20v-6h6" />
-                </>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            </button>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
+              <button
+                class="apply-text-btn"
+                type="button"
+                hidden
+                aria-label="Speichern"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
           )
         }
         <div class="article-content prose" set:html={htmlContent} />
         <div class="content-preview prose" hidden></div>
-        <button
-          class="apply-text-btn"
-          type="button"
-          hidden
-          aria-label="Änderungen übernehmen"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </button>
       </div>
 
       <!-- Sidebar -->
@@ -547,13 +543,19 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
      CONTENT ACTIONS (Text Regeneration)
      ═══════════════════════════════════════════════════════════════════════════ */
 
+  .content-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
   .regenerate-text-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
-    margin-bottom: var(--space-4);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -594,7 +596,6 @@ const formattedDate = article.data.date.toLocaleDateString('de-DE', {
     justify-content: center;
     width: 36px;
     height: 36px;
-    margin-top: var(--space-4);
     background: var(--color-success, #4ade80);
     border: none;
     border-radius: var(--radius-md);
