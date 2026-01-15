@@ -22,6 +22,7 @@ build:
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv ||true
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
 
 deploy_stage:
   stage: deploy_stage
@@ -30,10 +31,6 @@ deploy_stage:
   only:
     - main
   extends: .deploy
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-  script:
-    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
   environment:
     name: stage
     url: https://$URL
