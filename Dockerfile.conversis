@@ -13,9 +13,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy pre-built application
 COPY --chown=astro:nodejs dist ./dist
 
-# Create directories for runtime content with correct ownership
-RUN mkdir -p src/content/articles dist/client/images && \
-    chown -R astro:nodejs src dist/client/images
+# Create directory for runtime content (articles + co-located images)
+RUN mkdir -p src/content/articles && \
+    chown -R astro:nodejs src/content/articles
 
 # Switch to non-root user
 USER astro
