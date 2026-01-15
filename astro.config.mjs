@@ -15,4 +15,7 @@ export default defineConfig({
       allowedHosts: true,
     },
   },
+  experimental: {
+    liveContentCollections: true,
+  },
 });
