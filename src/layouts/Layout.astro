@@ -1,9 +1,10 @@
 ---
 interface Props {
   title: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const { title, description } = Astro.props;
 const currentPath = Astro.url.pathname;
 const authCookie = Astro.cookies.get('editor-auth');
 const isAuthenticated = !!authCookie?.value;
@@ -14,6 +15,7 @@ const isAuthenticated = !!authCookie?.value;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {description && <meta name="description" content={description} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} | NCA Content</title>
 
@@ -651,6 +653,83 @@ const isAuthenticated = !!authCookie?.value;
           height: 16px;
         }
       }
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SITE FOOTER
+         ═══════════════════════════════════════════════════════════════════════════ */
+
+      .site-footer {
+        margin-top: auto;
+        padding: var(--space-12) 0;
+        background: var(--color-surface);
+        border-top: 1px solid var(--color-border);
+      }
+
+      .footer-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-6);
+        text-align: center;
+      }
+
+      .footer-brand {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+
+      .footer-logo {
+        font-family: var(--font-display);
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--color-text);
+      }
+
+      .footer-tagline {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-wider);
+      }
+
+      .footer-nav {
+        display: flex;
+        gap: var(--space-8);
+      }
+
+      .footer-nav a {
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
+
+      .footer-nav a:hover {
+        color: var(--color-primary);
+      }
+
+      .footer-legal {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+      }
+
+      .footer-legal a {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .footer-legal a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 480px) {
+        .footer-nav {
+          flex-direction: column;
+          gap: var(--space-4);
+        }
+      }
     </style>
   </head>
   <body>
@@ -702,6 +781,21 @@ const isAuthenticated = !!authCookie?.value;
     <main class="site-main">
       <slot />
     </main>
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo">NCA Content</span>
+          <span class="footer-tagline">AI-powered Content Marketing</span>
+        </div>
+        <nav class="footer-nav" aria-label="Footer Navigation">
+          <a href="/ueber-ai-cms">Über AI CMS</a>
+          <a href="/impressum">Impressum</a>
+        </nav>
+        <div class="footer-legal">
+          POC Projekt von <a href="https://nevercodealone.de" target="_blank" rel="noopener">Never Code Alone</a>
+        </div>
+      </div>
+    </footer>
     <script>
       const logoutBtn = document.querySelector('.logout-btn');
       logoutBtn?.addEventListener('click', async () => {
