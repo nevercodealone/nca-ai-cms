@@ -19,10 +19,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/db ./db
 COPY --from=builder /app/astro.config.mjs ./
 COPY --from=builder /app/tsconfig.json ./
 
-RUN mkdir -p src/content/articles && \
+RUN mkdir -p src/content/articles .astro && \
     chown -R astro:nodejs .
 
 USER astro
