@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
+    "@astrojs/db": "^0.18.3",
     "@astrojs/node": "^9.5.1",
     "@astrojs/react": "^4.4.2",
     "@google/genai": "^1.31.0",
