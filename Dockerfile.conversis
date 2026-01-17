@@ -7,8 +7,9 @@ RUN npm ci
 
 FROM deps AS builder
 COPY . .
-# Build with empty articles folder
-RUN rm -rf src/content/articles/* && npm run build
+# Build with empty articles folder and local database
+ENV ASTRO_DATABASE_FILE=/app/.astro/content.db
+RUN mkdir -p .astro && rm -rf src/content/articles/* && npm run build
 
 FROM base AS runner
 RUN addgroup -g 1001 -S nodejs && \
@@ -31,6 +32,7 @@ USER astro
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
+ENV ASTRO_DATABASE_FILE=/app/.astro/content.db
 
 EXPOSE 4321
 

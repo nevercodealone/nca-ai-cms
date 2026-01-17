@@ -33,6 +33,7 @@ services:
       - 'traefik.docker.network=proxy'
     environment:
       - NODE_ENV=production
+      - ASTRO_DATABASE_FILE=/app/.astro/content.db
       - EDITOR_ADMIN=$EDITOR_ADMIN
       - EDITOR_PASSWORD=$EDITOR_PASSWORD
       - GOOGLE_GEMINI_API_KEY=$GOOGLE_GEMINI_API_KEY
