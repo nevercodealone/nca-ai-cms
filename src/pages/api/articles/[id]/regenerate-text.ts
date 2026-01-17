@@ -4,6 +4,7 @@ import {
   ArticleNotFoundError,
 } from '../../../../services/ArticleService';
 import { ContentGenerator } from '../../../../services/ContentGenerator';
+import { PromptService } from '../../../../services/PromptService';
 import { getEnvVariable } from '../../../../utils/envUtils';
 
 // POST /api/articles/[id]/regenerate-text - Generate new content for article
@@ -29,7 +30,8 @@ export const POST: APIRoute = async ({ params }) => {
 
     // Generate new content using existing title as keywords
     const apiKey = getEnvVariable('GOOGLE_GEMINI_API_KEY');
-    const generator = new ContentGenerator({ apiKey });
+    const promptService = new PromptService();
+    const generator = new ContentGenerator({ apiKey, promptService });
 
     // Use the existing title as keywords for regeneration
     const newArticle = await generator.generateFromKeywords(
