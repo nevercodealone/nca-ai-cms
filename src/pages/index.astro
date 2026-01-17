@@ -2,9 +2,31 @@
 import { Image } from 'astro:assets';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { db, SiteSettings, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
 import DeleteAction from '../components/DeleteAction.astro';
 import { ArticleService } from '../services/ArticleService';
+
+// Load hero content from database
+const getSetting = async (key: string, fallback: string) => {
+  const result = await db
+    .select()
+    .from(SiteSettings)
+    .where(eq(SiteSettings.key, key))
+    .get();
+  return result?.value ?? fallback;
+};
+
+const heroKicker = await getSetting(
+  'hero_kicker',
+  'Web Accessibility Expertise'
+);
+const heroTitle = await getSetting('hero_title', 'NCA Content');
+const heroTitleAccent = await getSetting('hero_title_accent', 'Marketing');
+const heroDescription = await getSetting(
+  'hero_description',
+  'Fachartikel für barrierefreie Webentwicklung und digitale Inklusion'
+);
 
 // Check if user is authenticated
 const authCookie = Astro.cookies.get('editor-auth');
@@ -50,13 +72,13 @@ const remainingArticles = sortedArticles.slice(1);
   <section class="hero">
     <div class="container">
       <div class="hero-content">
-        <p class="hero-kicker">Web Accessibility Expertise</p>
+        <p class="hero-kicker">{heroKicker}</p>
         <h1 class="hero-title">
-          NCA Content
-          <span class="hero-title-accent">Marketing</span>
+          {heroTitle}
+          <span class="hero-title-accent">{heroTitleAccent}</span>
         </h1>
         <p class="hero-description">
-          Fachartikel für barrierefreie Webentwicklung und digitale Inklusion
+          {heroDescription}
         </p>
       </div>
       <div class="hero-decoration" aria-hidden="true"></div>
