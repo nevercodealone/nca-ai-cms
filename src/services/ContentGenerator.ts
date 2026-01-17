@@ -3,6 +3,13 @@ import { Source } from '../domain/entities/Source';
 import { Article, type ArticleProps } from '../domain/entities/Article';
 import { ContentFetcher, type FetchedContent } from './ContentFetcher';
 
+// PromptService interface for dependency injection (avoids astro:db import in tests)
+export interface IPromptService {
+  getPrompt(id: string): Promise<string | null>;
+  getCTAConfig(): Promise<{ url: string; style: string; prompt: string }>;
+  getCoreTags(): Promise<string[]>;
+}
+
 export interface GeneratedContent {
   title: string;
   description: string;
@@ -13,6 +20,7 @@ export interface GeneratedContent {
 export interface ContentGeneratorConfig {
   apiKey: string;
   model?: string;
+  promptService?: IPromptService;
 }
 
 interface SourceAnalysis {
@@ -22,33 +30,52 @@ interface SourceAnalysis {
   codeExamples: string[];
 }
 
-const CONTACT_URL =
+// Fallback values when database is not available
+const DEFAULT_CONTACT_URL =
   'https://nevercodealone.de/de/landingpages/barrierefreies-webdesign';
 
-const CTAS = [
-  `Sie möchten Ihre Website barrierefrei gestalten? [Vereinbaren Sie jetzt ein kostenloses Erstgespräch](${CONTACT_URL}) mit unseren Accessibility-Experten.`,
-  `Brauchen Sie Unterstützung bei WCAG-Konformität? [Kontaktieren Sie Never Code Alone](${CONTACT_URL}) für eine professionelle Beratung.`,
-  `Maximieren Sie Ihre Reichweite durch barrierefreies Webdesign. [Jetzt unverbindlich anfragen](${CONTACT_URL}) und mehr erfahren.`,
-  `Inklusion beginnt digital. [Lassen Sie sich von unseren Experten beraten](${CONTACT_URL}) – kostenlos und unverbindlich.`,
-  `Performance, SEO und Barrierefreiheit in einem? [Sprechen Sie mit Never Code Alone](${CONTACT_URL}) über Ihre Möglichkeiten.`,
-  `Accessibility-Audit gefällig? [Fordern Sie jetzt Ihre kostenlose Erstberatung an](${CONTACT_URL}) und machen Sie Ihre Website zugänglich.`,
-  `Barrierefreies Webdesign ist kein Luxus, sondern Notwendigkeit. [Starten Sie jetzt mit Never Code Alone](${CONTACT_URL}).`,
-  `Sie wollen alle Nutzer erreichen? [Erfahren Sie mehr über barrierefreies Webdesign](${CONTACT_URL}) in einem persönlichen Gespräch.`,
-  `WCAG, BITV, Screenreader-Kompatibilität – wir helfen Ihnen. [Jetzt Kontakt aufnehmen](${CONTACT_URL}) für Ihr Accessibility-Projekt.`,
-  `Machen Sie Ihre digitale Präsenz inklusiv. [Buchen Sie ein kostenloses Beratungsgespräch](${CONTACT_URL}) bei Never Code Alone.`,
-];
+const DEFAULT_CORE_TAGS = ['Semantik', 'HTML', 'Barrierefrei'];
 
-const CORE_TAGS = ['Semantik', 'HTML', 'Barrierefrei'];
+const DEFAULT_SYSTEM_PROMPT = `Du bist ein erfahrener technischer Content-Writer für Web-Entwicklung.
+Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
+
+Zielgruppe: Content-Marketing-Professionals und Frontend-Entwickler
+Tonalität: Professionell, aber zugänglich. Technisch korrekt, nicht übermäßig akademisch.
+
+KRITISCH - 100% Originalität:
+- Schreibe einen KOMPLETT EIGENSTÄNDIGEN Artikel
+- KEINE Sätze, Formulierungen oder Strukturen aus externen Quellen übernehmen
+- KEINE Hinweise auf Quellen, Referenzen oder Inspiration im Text
+- Nutze ausschließlich DEIN Expertenwissen zur Barrierefreiheit
+- Jeder Satz muss NEU formuliert sein - wie von einem Experten geschrieben
+- Der Artikel muss wirken als käme er aus eigener Fachkenntnis
+
+Regeln:
+- Schreibe auf Deutsch
+- Mindestens 800 Wörter
+- Verwende praktische Codebeispiele (eigene Beispiele, nicht kopiert)
+- WICHTIG: Content MUSS mit einer H1-Überschrift (# Titel) beginnen
+- Danach H2 (##) und H3 (###) Hierarchie ohne Sprünge
+- WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
+- WICHTIG: Integriere die Keywords "Semantik", "HTML" und "Barrierefrei" natürlich in den Text
+
+Titel-Regeln:
+- Das Hauptthema/Keyword MUSS im Titel vorkommen
+- Nutze Zahlen wenn möglich (z.B. "5 Tipps", "3 Fehler")
+- Zeige den Nutzen/Benefit (z.B. "So vermeidest du...", "Warum X wichtig ist")
+- Wecke Neugier oder löse ein Problem`;
 
 export class ContentGenerator {
   private client: GoogleGenerativeAI;
   private model: string;
   private fetcher: ContentFetcher;
+  private promptService: IPromptService | undefined;
 
   constructor(config: ContentGeneratorConfig) {
     this.client = new GoogleGenerativeAI(config.apiKey);
     this.model = config.model || 'gemini-2.5-flash';
     this.fetcher = new ContentFetcher();
+    this.promptService = config.promptService;
   }
 
   async generateFromUrl(sourceUrl: string): Promise<Article> {
@@ -203,8 +230,9 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
   private async generateContent(
     analysis: SourceAnalysis
   ): Promise<GeneratedContent> {
-    const systemPrompt = this.buildSystemPrompt();
+    const systemPrompt = await this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(analysis);
+    const coreTags = await this.getCoreTags();
 
     const model = this.client.getGenerativeModel({
       model: this.model,
@@ -246,45 +274,38 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
       title: data.title,
       description: data.description,
       content: data.content,
-      tags: [...new Set([...CORE_TAGS, ...data.tags])],
+      tags: [...new Set([...coreTags, ...data.tags])],
     };
   }
 
-  private buildSystemPrompt(): string {
-    const ctaIndex = new Date().getMinutes() % CTAS.length;
-    const cta = CTAS[ctaIndex];
+  private async buildSystemPrompt(): Promise<string> {
+    // Try to load from database
+    if (this.promptService) {
+      try {
+        const [basePrompt, ctaConfig] = await Promise.all([
+          this.promptService.getPrompt('system_prompt'),
+          this.promptService.getCTAConfig(),
+        ]);
 
-    return `Du bist ein erfahrener technischer Content-Writer für Web-Entwicklung.
-Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
+        if (basePrompt) {
+          // Add CTA instructions to the system prompt
+          return `${basePrompt}
 
-Zielgruppe: Content-Marketing-Professionals und Frontend-Entwickler
-Tonalität: Professionell, aber zugänglich. Technisch korrekt, nicht übermäßig akademisch.
+- WICHTIG: Beende den Artikel mit einem einzigartigen Call-to-Action:
+  - Link: ${ctaConfig.url}
+  - Stil: ${ctaConfig.style}
+  ${ctaConfig.prompt}`;
+        }
+      } catch (error) {
+        console.warn('Failed to load prompts from database, using defaults');
+      }
+    }
 
-KRITISCH - 100% Originalität:
-- Schreibe einen KOMPLETT EIGENSTÄNDIGEN Artikel
-- KEINE Sätze, Formulierungen oder Strukturen aus externen Quellen übernehmen
-- KEINE Hinweise auf Quellen, Referenzen oder Inspiration im Text
-- Nutze ausschließlich DEIN Expertenwissen zur Barrierefreiheit
-- Jeder Satz muss NEU formuliert sein - wie von einem Experten geschrieben
-- Der Artikel muss wirken als käme er aus eigener Fachkenntnis
+    // Fallback to default with static CTA
+    return `${DEFAULT_SYSTEM_PROMPT}
 
-Regeln:
-- Schreibe auf Deutsch
-- Mindestens 800 Wörter
-- Verwende praktische Codebeispiele (eigene Beispiele, nicht kopiert)
-- WICHTIG: Content MUSS mit einer H1-Überschrift (# Titel) beginnen
-- Danach H2 (##) und H3 (###) Hierarchie ohne Sprünge
-- WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
-- WICHTIG: Integriere die Keywords "Semantik", "HTML" und "Barrierefrei" natürlich in den Text
-- WICHTIG: Beende den Artikel mit genau diesem Call-to-Action:
-
-${cta}
-
-Titel-Regeln:
-- Das Hauptthema/Keyword MUSS im Titel vorkommen
-- Nutze Zahlen wenn möglich (z.B. "5 Tipps", "3 Fehler")
-- Zeige den Nutzen/Benefit (z.B. "So vermeidest du...", "Warum X wichtig ist")
-- Wecke Neugier oder löse ein Problem`;
+- WICHTIG: Beende den Artikel mit einem Call-to-Action, der zum Thema passt.
+  Verwende diesen Link: [Kontakt aufnehmen](${DEFAULT_CONTACT_URL})`;
   }
 
   private buildUserPrompt(analysis: SourceAnalysis): string {
@@ -297,5 +318,16 @@ ${analysis.uniqueInsights.map((p) => `- ${p}`).join('\n')}
 ${analysis.codeExamples.length > 0 ? `Zeige praktische Code-Beispiele für:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
 
 Wichtig: Schreibe komplett eigenständig aus deiner Expertise heraus.`;
+  }
+
+  private async getCoreTags(): Promise<string[]> {
+    if (this.promptService) {
+      try {
+        return await this.promptService.getCoreTags();
+      } catch {
+        // Fall through to default
+      }
+    }
+    return DEFAULT_CORE_TAGS;
   }
 }
