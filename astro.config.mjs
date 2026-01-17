@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import { loadEnv } from 'vite';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
+import db from '@astrojs/db';
 
 // Load .env files into process.env for SSR
 const {
@@ -20,7 +21,7 @@ Object.assign(process.env, {
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react()],
+  integrations: [react(), db()],
   output: 'server',
   adapter: node({
     mode: 'standalone',
