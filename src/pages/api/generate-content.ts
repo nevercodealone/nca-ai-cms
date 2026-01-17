@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { ContentGenerator } from '../../services/ContentGenerator';
+import { PromptService } from '../../services/PromptService';
 import { getEnvVariable } from '../../utils/envUtils';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -17,7 +18,8 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const apiKey = getEnvVariable('GOOGLE_GEMINI_API_KEY');
-    const generator = new ContentGenerator({ apiKey });
+    const promptService = new PromptService();
+    const generator = new ContentGenerator({ apiKey, promptService });
     const article = url
       ? await generator.generateFromUrl(url)
       : await generator.generateFromKeywords(keywords);
