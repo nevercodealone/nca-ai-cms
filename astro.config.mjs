@@ -21,6 +21,7 @@ Object.assign(process.env, {
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://semantik-html-barrierefrei.de',
   integrations: [react(), db()],
   output: 'server',
   adapter: node({

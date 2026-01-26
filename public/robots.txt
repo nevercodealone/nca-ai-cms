@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /editor
-Disallow: /login
-Disallow: /api/
-
-Sitemap: https://nevercodealone.de/sitemap.xml

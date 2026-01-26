@@ -53,7 +53,6 @@ export async function GET(context: APIContext): Promise<Response> {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
-      'X-Robots-Tag': 'noindex',
     },
   });
 }
