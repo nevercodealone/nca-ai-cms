@@ -6,6 +6,7 @@ interface Props {
 
 const { title, description } = Astro.props;
 const currentPath = Astro.url.pathname;
+const canonicalUrl = new URL(currentPath, Astro.site ?? Astro.url.origin).href;
 const authCookie = Astro.cookies.get('editor-auth');
 const isAuthenticated = !!authCookie?.value;
 ---
@@ -16,6 +17,7 @@ const isAuthenticated = !!authCookie?.value;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap.xml" />
     <title>{title} | NCA Content</title>

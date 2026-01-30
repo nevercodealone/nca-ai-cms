@@ -65,9 +65,27 @@ for (const article of sortedArticles) {
 
 const featuredArticle = sortedArticles[0];
 const remainingArticles = sortedArticles.slice(1);
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin))
+  .toString()
+  .replace(/\/+$/, '');
+const homeJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'NCA Content',
+  url: siteUrl,
+  description: heroDescription,
+  inLanguage: 'de',
+  publisher: {
+    '@type': 'Organization',
+    name: 'NCA Content',
+    url: siteUrl,
+  },
+};
 ---
 
-<Layout title="Home">
+<Layout title="Home" description={heroDescription}>
+  <script type="application/ld+json" set:html={JSON.stringify(homeJsonLd)} />
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">

@@ -33,9 +33,33 @@ const formattedDate = article.date.toLocaleDateString('de-DE', {
   month: 'long',
   day: 'numeric',
 });
+
+const siteUrl = (Astro.site ?? new URL(Astro.url.origin))
+  .toString()
+  .replace(/\/+$/, '');
+const articleUrl = `${siteUrl}/articles/${articleSlug}`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.title,
+  description: article.description,
+  datePublished: article.date.toISOString(),
+  url: articleUrl,
+  inLanguage: 'de',
+  publisher: {
+    '@type': 'Organization',
+    name: 'NCA Content',
+    url: siteUrl,
+  },
+  ...(article.image
+    ? { image: `${siteUrl}/api/article-image/${articleSlug}/hero.webp` }
+    : {}),
+  ...(article.tags?.length ? { keywords: article.tags.join(', ') } : {}),
+};
 ---
 
-<Layout title={article.title}>
+<Layout title={article.title} description={article.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <article class="article-page">
     <!-- Article Header -->
     <header class="article-header" data-article-id={articleSlug}>
