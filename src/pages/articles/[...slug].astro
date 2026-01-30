@@ -37,7 +37,7 @@ const formattedDate = article.date.toLocaleDateString('de-DE', {
 const siteUrl = (Astro.site ?? new URL(Astro.url.origin))
   .toString()
   .replace(/\/+$/, '');
-const articleUrl = `${siteUrl}/articles/${articleSlug}`;
+const articleUrl = `${siteUrl}/articles/${slug}`;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -52,7 +52,7 @@ const jsonLd = {
     url: siteUrl,
   },
   ...(article.image
-    ? { image: `${siteUrl}/api/article-image/${articleSlug}/hero.webp` }
+    ? { image: `${siteUrl}/api/article-image/${slug}/hero.webp` }
     : {}),
   ...(article.tags?.length ? { keywords: article.tags.join(', ') } : {}),
 };
