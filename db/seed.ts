@@ -1,4 +1,4 @@
-import { db, SiteSettings, Prompts } from 'astro:db';
+import { db, SiteSettings, Prompts, ScheduledPosts } from 'astro:db';
 
 export default async function seed() {
   // ============================================
@@ -188,7 +188,7 @@ Wichtig: Schreibe komplett eigenständig aus deiner Expertise heraus.`,
     id: 'image_prompt',
     name: 'Image Generation Prompt',
     category: 'image',
-    promptText: `Blog header image about "{title}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people, no text.`,
+    promptText: `Blog header image about "{title}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people. IMPORTANT: absolutely no text, no letters, no words, no typography, no labels, no captions anywhere in the image.`,
     updatedAt: new Date(),
   });
 
@@ -218,6 +218,37 @@ Example for topic "Forms": barrierefreiheit-formulare-accessible-forms`,
     promptText: `Illustration zum Thema {title} - Barrierefreiheit im Web`,
     updatedAt: new Date(),
   });
+
+  // ============================================
+  // SCHEDULED POSTS (Examples)
+  // ============================================
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  nextWeek.setHours(0, 0, 0, 0);
+
+  await db.insert(ScheduledPosts).values([
+    {
+      id: `sp_${Date.now()}_1`,
+      input: 'ARIA Landmarks barrierefreie Navigation',
+      inputType: 'keywords',
+      scheduledDate: tomorrow,
+      status: 'pending',
+      createdAt: new Date(),
+    },
+    {
+      id: `sp_${Date.now()}_2`,
+      input: 'https://www.w3.org/WAI/ARIA/apg/',
+      inputType: 'url',
+      scheduledDate: nextWeek,
+      status: 'pending',
+      createdAt: new Date(),
+    },
+  ]);
 
   console.log('Seed data inserted successfully!');
 }
