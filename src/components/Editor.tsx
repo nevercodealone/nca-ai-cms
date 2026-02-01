@@ -1,6 +1,65 @@
 import { useState, useEffect } from 'react';
 
 type TabType = 'generate' | 'settings';
+type SettingsSubTab =
+  | 'homepage'
+  | 'content-ai'
+  | 'analysis-ai'
+  | 'image-ai'
+  | 'website';
+
+const SETTINGS_GROUPS: {
+  key: SettingsSubTab;
+  label: string;
+  items: { type: 'setting' | 'prompt'; id: string }[];
+}[] = [
+  {
+    key: 'homepage',
+    label: 'Homepage',
+    items: [
+      { type: 'setting', id: 'hero_kicker' },
+      { type: 'setting', id: 'hero_title' },
+      { type: 'setting', id: 'hero_title_accent' },
+      { type: 'setting', id: 'hero_description' },
+    ],
+  },
+  {
+    key: 'content-ai',
+    label: 'Content-KI',
+    items: [
+      { type: 'prompt', id: 'system_prompt' },
+      { type: 'prompt', id: 'user_prompt_template' },
+      { type: 'prompt', id: 'cta_prompt' },
+    ],
+  },
+  {
+    key: 'analysis-ai',
+    label: 'Analyse-KI',
+    items: [
+      { type: 'prompt', id: 'source_analysis' },
+      { type: 'prompt', id: 'keyword_research' },
+    ],
+  },
+  {
+    key: 'image-ai',
+    label: 'Bild-KI',
+    items: [
+      { type: 'prompt', id: 'image_prompt' },
+      { type: 'prompt', id: 'filename_prompt' },
+      { type: 'prompt', id: 'alt_text_template' },
+    ],
+  },
+  {
+    key: 'website',
+    label: 'Website',
+    items: [
+      { type: 'setting', id: 'cta_url' },
+      { type: 'setting', id: 'cta_style' },
+      { type: 'setting', id: 'core_tags' },
+      { type: 'setting', id: 'imprint_content' },
+    ],
+  },
+];
 
 interface Prompt {
   id: string;
@@ -30,6 +89,8 @@ interface GeneratedImage {
 export default function Editor() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>('generate');
+  const [activeSettingsTab, setActiveSettingsTab] =
+    useState<SettingsSubTab>('homepage');
 
   // Generate tab state
   const [input, setInput] = useState('');
@@ -179,11 +240,13 @@ export default function Editor() {
   const getPromptLabel = (id: string): string => {
     const labels: Record<string, string> = {
       system_prompt: 'System Prompt',
+      user_prompt_template: 'User Prompt Vorlage',
       source_analysis: 'Quellen-Analyse',
       keyword_research: 'Keyword-Recherche',
       cta_prompt: 'CTA Generierung',
       image_prompt: 'Bild-Prompt',
       filename_prompt: 'Dateiname-Prompt',
+      alt_text_template: 'Alt-Text Vorlage',
     };
     return labels[id] || id;
   };
@@ -361,6 +424,132 @@ export default function Editor() {
   const isLoading =
     generating || regeneratingText || regeneratingImage || publishing;
 
+  // Render a single settings card (prompt or setting)
+  const renderSettingsCard = (item: {
+    type: 'setting' | 'prompt';
+    id: string;
+  }) => {
+    if (item.type === 'prompt') {
+      const prompt = prompts.find((p) => p.id === item.id);
+      if (!prompt) return null;
+      const isEditing = editingPrompt === prompt.id;
+
+      return (
+        <div key={prompt.id} style={styles.settingsCard}>
+          <div style={styles.settingsCardHeader}>
+            <span style={styles.settingsItemLabel}>
+              {getPromptLabel(prompt.id)}
+            </span>
+            <span style={styles.settingsItemCategory}>{prompt.category}</span>
+          </div>
+          {isEditing ? (
+            <div style={styles.editArea}>
+              <textarea
+                value={editValues[prompt.id] || ''}
+                onChange={(e) =>
+                  setEditValues({
+                    ...editValues,
+                    [prompt.id]: e.target.value,
+                  })
+                }
+                style={styles.textarea}
+                rows={10}
+              />
+              <div style={styles.editButtons}>
+                <button
+                  onClick={() => handleSavePrompt(prompt.id)}
+                  disabled={savingId === prompt.id}
+                  style={{
+                    ...styles.smallButton,
+                    ...styles.saveButton,
+                    opacity: savingId === prompt.id ? 0.6 : 1,
+                  }}
+                >
+                  {savingId === prompt.id ? 'Speichert...' : 'Speichern'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  style={{ ...styles.smallButton, ...styles.cancelButton }}
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={styles.settingsItemValue}>
+              <pre style={styles.cardPreview}>{prompt.promptText}</pre>
+              <button
+                onClick={() => handleEditPrompt(prompt.id, prompt.promptText)}
+                style={{ ...styles.smallButton, ...styles.editButton }}
+              >
+                Bearbeiten
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Setting item
+    const setting = settings.find((s) => s.key === item.id);
+    if (!setting) return null;
+    const isEditing = editingSetting === setting.key;
+
+    return (
+      <div key={setting.key} style={styles.settingsCard}>
+        <div style={styles.settingsCardHeader}>
+          <span style={styles.settingsItemLabel}>
+            {getSettingLabel(setting.key)}
+          </span>
+        </div>
+        {isEditing ? (
+          <div style={styles.editArea}>
+            <textarea
+              value={editValues[setting.key] || ''}
+              onChange={(e) =>
+                setEditValues({
+                  ...editValues,
+                  [setting.key]: e.target.value,
+                })
+              }
+              style={styles.textarea}
+              rows={setting.key === 'imprint_content' ? 12 : 3}
+            />
+            <div style={styles.editButtons}>
+              <button
+                onClick={() => handleSaveSetting(setting.key)}
+                disabled={savingId === setting.key}
+                style={{
+                  ...styles.smallButton,
+                  ...styles.saveButton,
+                  opacity: savingId === setting.key ? 0.6 : 1,
+                }}
+              >
+                {savingId === setting.key ? 'Speichert...' : 'Speichern'}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                style={{ ...styles.smallButton, ...styles.cancelButton }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={styles.settingsItemValue}>
+            <pre style={styles.cardPreview}>{setting.value}</pre>
+            <button
+              onClick={() => handleEditSetting(setting.key, setting.value)}
+              style={{ ...styles.smallButton, ...styles.editButton }}
+            >
+              Bearbeiten
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render Settings Tab Content
   const renderSettingsTab = () => {
     if (settingsLoading) {
@@ -372,145 +561,53 @@ export default function Editor() {
       );
     }
 
+    const activeGroup = SETTINGS_GROUPS.find(
+      (g) => g.key === activeSettingsTab
+    );
+
     return (
       <div style={styles.settingsContent}>
         {settingsError && <div style={styles.error}>{settingsError}</div>}
 
-        {/* AI Prompts Section */}
-        <div style={styles.settingsSection}>
-          <h3 style={styles.sectionTitle}>AI Prompts</h3>
-          {prompts.map((prompt) => (
-            <div key={prompt.id} style={styles.settingsItem}>
-              <div style={styles.settingsItemHeader}>
-                <span style={styles.settingsItemLabel}>
-                  {getPromptLabel(prompt.id)}
-                </span>
-                <span style={styles.settingsItemCategory}>
-                  {prompt.category}
-                </span>
-              </div>
-              {editingPrompt === prompt.id ? (
-                <div style={styles.editArea}>
-                  <textarea
-                    value={editValues[prompt.id] || ''}
-                    onChange={(e) =>
-                      setEditValues({
-                        ...editValues,
-                        [prompt.id]: e.target.value,
-                      })
-                    }
-                    style={styles.textarea}
-                    rows={8}
-                  />
-                  <div style={styles.editButtons}>
-                    <button
-                      onClick={() => handleSavePrompt(prompt.id)}
-                      disabled={savingId === prompt.id}
-                      style={{
-                        ...styles.smallButton,
-                        ...styles.saveButton,
-                        opacity: savingId === prompt.id ? 0.6 : 1,
-                      }}
-                    >
-                      {savingId === prompt.id ? 'Speichert...' : 'Speichern'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      style={{ ...styles.smallButton, ...styles.cancelButton }}
-                    >
-                      Abbrechen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.settingsItemValue}>
-                  <pre style={styles.promptPreview}>
-                    {prompt.promptText.slice(0, 200)}
-                    {prompt.promptText.length > 200 ? '...' : ''}
-                  </pre>
-                  <button
-                    onClick={() =>
-                      handleEditPrompt(prompt.id, prompt.promptText)
-                    }
-                    style={{ ...styles.smallButton, ...styles.editButton }}
-                  >
-                    Bearbeiten
-                  </button>
-                </div>
-              )}
-            </div>
+        {/* Sub-tab navigation */}
+        <div style={styles.subTabNav}>
+          {SETTINGS_GROUPS.map((group) => (
+            <button
+              key={group.key}
+              onClick={() => setActiveSettingsTab(group.key)}
+              style={{
+                ...styles.subTab,
+                ...(activeSettingsTab === group.key ? styles.subTabActive : {}),
+              }}
+            >
+              {group.label}
+            </button>
           ))}
         </div>
 
-        {/* Site Settings Section */}
-        <div style={styles.settingsSection}>
-          <h3 style={styles.sectionTitle}>Website-Einstellungen</h3>
-          {settings.map((setting) => (
-            <div key={setting.key} style={styles.settingsItem}>
-              <div style={styles.settingsItemHeader}>
-                <span style={styles.settingsItemLabel}>
-                  {getSettingLabel(setting.key)}
-                </span>
-              </div>
-              {editingSetting === setting.key ? (
-                <div style={styles.editArea}>
-                  <textarea
-                    value={editValues[setting.key] || ''}
-                    onChange={(e) =>
-                      setEditValues({
-                        ...editValues,
-                        [setting.key]: e.target.value,
-                      })
-                    }
-                    style={styles.textarea}
-                    rows={setting.key === 'imprint_content' ? 12 : 3}
-                  />
-                  <div style={styles.editButtons}>
-                    <button
-                      onClick={() => handleSaveSetting(setting.key)}
-                      disabled={savingId === setting.key}
-                      style={{
-                        ...styles.smallButton,
-                        ...styles.saveButton,
-                        opacity: savingId === setting.key ? 0.6 : 1,
-                      }}
-                    >
-                      {savingId === setting.key ? 'Speichert...' : 'Speichern'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      style={{ ...styles.smallButton, ...styles.cancelButton }}
-                    >
-                      Abbrechen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.settingsItemValue}>
-                  <pre style={styles.settingPreview}>
-                    {setting.value.slice(0, 150)}
-                    {setting.value.length > 150 ? '...' : ''}
-                  </pre>
-                  <button
-                    onClick={() =>
-                      handleEditSetting(setting.key, setting.value)
-                    }
-                    style={{ ...styles.smallButton, ...styles.editButton }}
-                  >
-                    Bearbeiten
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Card grid for active group */}
+        {activeGroup && (
+          <div style={styles.cardGrid}>
+            {activeGroup.items.map((item) => renderSettingsCard(item))}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.panel}>
+    <div
+      style={{
+        ...styles.container,
+        gridTemplateColumns: activeTab === 'settings' ? '1fr' : '380px 1fr',
+      }}
+    >
+      <div
+        style={{
+          ...styles.panel,
+          ...(activeTab === 'settings' ? styles.panelFullWidth : {}),
+        }}
+      >
         <div style={styles.headerRow}>
           <h2 style={styles.heading}>
             {activeTab === 'generate' ? 'Content Generator' : 'Einstellungen'}
@@ -1084,37 +1181,54 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text, #faf9f7)',
   },
   // Settings Tab
+  panelFullWidth: {
+    maxWidth: '100%',
+  },
   settingsContent: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '1.5rem',
   },
-  settingsSection: {
+  subTabNav: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    gap: '0.375rem',
+    flexWrap: 'wrap' as const,
+  },
+  subTab: {
+    padding: '0.5rem 1rem',
+    background: 'transparent',
+    border: '1px solid var(--color-border, #2a2a2e)',
+    borderRadius: '9999px',
+    color: 'var(--color-text-muted, #9a9590)',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap' as const,
+  },
+  subTabActive: {
+    background: 'var(--color-surface-elevated, #1a1a1d)',
+    color: 'var(--color-text, #faf9f7)',
+    borderColor: 'var(--color-border-accent, #3a3a40)',
+  },
+  cardGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
     gap: '1rem',
   },
-  sectionTitle: {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.12em',
-    color: 'var(--color-text-muted, #9a9590)',
-    marginBottom: '0.5rem',
-    paddingBottom: '0.5rem',
-    borderBottom: '1px solid var(--color-border, #2a2a2e)',
-  },
-  settingsItem: {
+  settingsCard: {
     background: 'var(--color-bg, #0a0a0b)',
-    borderRadius: '8px',
-    padding: '1rem',
+    borderRadius: '12px',
+    padding: '1.25rem',
     border: '1px solid var(--color-border, #2a2a2e)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
   },
-  settingsItemHeader: {
+  settingsCardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '0.75rem',
   },
   settingsItemLabel: {
     fontSize: '0.875rem',
@@ -1136,7 +1250,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column' as const,
     gap: '0.75rem',
   },
-  promptPreview: {
+  cardPreview: {
     fontSize: '0.8rem',
     fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
     color: 'var(--color-text-muted, #9a9590)',
@@ -1144,14 +1258,8 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
     lineHeight: 1.5,
-  },
-  settingPreview: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-accent, #e8e6e1)',
-    margin: 0,
-    whiteSpace: 'pre-wrap' as const,
-    wordBreak: 'break-word' as const,
-    lineHeight: 1.5,
+    maxHeight: '200px',
+    overflow: 'auto',
   },
   editArea: {
     display: 'flex',
