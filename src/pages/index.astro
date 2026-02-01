@@ -6,6 +6,7 @@ import { db, SiteSettings, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
 import DeleteAction from '../components/DeleteAction.astro';
 import { ArticleService } from '../services/ArticleService';
+import { escapeJsonLd } from '../utils/sanitize';
 
 // Load hero content from database
 const getSetting = async (key: string, fallback: string) => {
@@ -85,7 +86,10 @@ const homeJsonLd = {
 ---
 
 <Layout title="Home" description={heroDescription}>
-  <script type="application/ld+json" set:html={JSON.stringify(homeJsonLd)} />
+  <script
+    type="application/ld+json"
+    set:html={escapeJsonLd(JSON.stringify(homeJsonLd))}
+  />
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
