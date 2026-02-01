@@ -1,6 +1,65 @@
 import { useState, useEffect } from 'react';
 
-type TabType = 'generate' | 'settings';
+type TabType = 'generate' | 'planner' | 'settings';
+type SettingsSubTab =
+  | 'homepage'
+  | 'content-ai'
+  | 'analysis-ai'
+  | 'image-ai'
+  | 'website';
+
+const SETTINGS_GROUPS: {
+  key: SettingsSubTab;
+  label: string;
+  items: { type: 'setting' | 'prompt'; id: string }[];
+}[] = [
+  {
+    key: 'homepage',
+    label: 'Homepage',
+    items: [
+      { type: 'setting', id: 'hero_kicker' },
+      { type: 'setting', id: 'hero_title' },
+      { type: 'setting', id: 'hero_title_accent' },
+      { type: 'setting', id: 'hero_description' },
+    ],
+  },
+  {
+    key: 'content-ai',
+    label: 'Content-KI',
+    items: [
+      { type: 'prompt', id: 'system_prompt' },
+      { type: 'prompt', id: 'user_prompt_template' },
+      { type: 'prompt', id: 'cta_prompt' },
+    ],
+  },
+  {
+    key: 'analysis-ai',
+    label: 'Analyse-KI',
+    items: [
+      { type: 'prompt', id: 'source_analysis' },
+      { type: 'prompt', id: 'keyword_research' },
+    ],
+  },
+  {
+    key: 'image-ai',
+    label: 'Bild-KI',
+    items: [
+      { type: 'prompt', id: 'image_prompt' },
+      { type: 'prompt', id: 'filename_prompt' },
+      { type: 'prompt', id: 'alt_text_template' },
+    ],
+  },
+  {
+    key: 'website',
+    label: 'Website',
+    items: [
+      { type: 'setting', id: 'cta_url' },
+      { type: 'setting', id: 'cta_style' },
+      { type: 'setting', id: 'core_tags' },
+      { type: 'setting', id: 'imprint_content' },
+    ],
+  },
+];
 
 interface Prompt {
   id: string;
@@ -27,9 +86,38 @@ interface GeneratedImage {
   filepath: string;
 }
 
+interface ScheduledPostData {
+  id: string;
+  input: string;
+  inputType: string;
+  scheduledDate: string;
+  status: string;
+  generatedTitle?: string | null;
+  generatedDescription?: string | null;
+  generatedContent?: string | null;
+  generatedTags?: string | null;
+  generatedImageData?: string | null;
+  generatedImageAlt?: string | null;
+  publishedPath?: string | null;
+  createdAt: string;
+}
+
 export default function Editor() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>('generate');
+  const [activeSettingsTab, setActiveSettingsTab] =
+    useState<SettingsSubTab>('homepage');
+
+  // Planner tab state
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPostData[]>([]);
+  const [plannerLoading, setPlannerLoading] = useState(false);
+  const [plannerError, setPlannerError] = useState<string | null>(null);
+  const [plannerInput, setPlannerInput] = useState('');
+  const [plannerDate, setPlannerDate] = useState('');
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [generatingMode, setGeneratingMode] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [autoPublishing, setAutoPublishing] = useState(false);
 
   // Generate tab state
   const [input, setInput] = useState('');
@@ -85,6 +173,465 @@ export default function Editor() {
     } finally {
       setSettingsLoading(false);
     }
+  };
+
+  // Load planner when planner tab is active
+  useEffect(() => {
+    if (activeTab === 'planner') {
+      loadPlanner();
+    }
+  }, [activeTab]);
+
+  const loadPlanner = async () => {
+    setPlannerLoading(true);
+    setPlannerError(null);
+    try {
+      // Auto-publish due posts on load
+      setAutoPublishing(true);
+      await fetch('/api/scheduler/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'auto' }),
+      });
+      setAutoPublishing(false);
+
+      const response = await fetch('/api/scheduler');
+      if (!response.ok) throw new Error('Failed to load planner');
+      const data = await response.json();
+      setScheduledPosts(data.posts || []);
+    } catch (err) {
+      setPlannerError(
+        err instanceof Error ? err.message : 'Failed to load planner'
+      );
+    } finally {
+      setPlannerLoading(false);
+      setAutoPublishing(false);
+    }
+  };
+
+  const handleAddScheduledPost = async () => {
+    if (!plannerInput.trim() || !plannerDate) return;
+    setPlannerError(null);
+    try {
+      const response = await fetch('/api/scheduler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: plannerInput.trim(),
+          scheduledDate: plannerDate,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to add entry');
+      }
+      setPlannerInput('');
+      setPlannerDate('');
+      await loadPlanner();
+    } catch (err) {
+      setPlannerError(
+        err instanceof Error ? err.message : 'Failed to add entry'
+      );
+    }
+  };
+
+  const handleDeleteScheduledPost = async (id: string) => {
+    setPlannerError(null);
+    try {
+      const response = await fetch(`/api/scheduler/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete entry');
+      }
+      await loadPlanner();
+    } catch (err) {
+      setPlannerError(
+        err instanceof Error ? err.message : 'Failed to delete entry'
+      );
+    }
+  };
+
+  const handleGenerateScheduledPost = async (
+    id: string,
+    mode: 'all' | 'text' | 'image' = 'all'
+  ) => {
+    setGeneratingId(id);
+    setGeneratingMode(mode);
+    setPlannerError(null);
+    try {
+      const response = await fetch('/api/scheduler/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, mode }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Generation failed');
+      }
+      await loadPlanner();
+    } catch (err) {
+      setPlannerError(err instanceof Error ? err.message : 'Generation failed');
+    } finally {
+      setGeneratingId(null);
+      setGeneratingMode(null);
+    }
+  };
+
+  const handlePublishScheduledPost = async (id: string) => {
+    setPublishingId(id);
+    setPlannerError(null);
+    try {
+      const response = await fetch('/api/scheduler/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Publish failed');
+      }
+      await loadPlanner();
+    } catch (err) {
+      setPlannerError(err instanceof Error ? err.message : 'Publish failed');
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const getStatusBadge = (
+    status: string
+  ): { label: string; color: string; bg: string } => {
+    switch (status) {
+      case 'pending':
+        return {
+          label: 'Geplant',
+          color: '#f59e0b',
+          bg: 'rgba(245, 158, 11, 0.12)',
+        };
+      case 'generated':
+        return {
+          label: 'Generiert',
+          color: '#3b82f6',
+          bg: 'rgba(59, 130, 246, 0.12)',
+        };
+      case 'published':
+        return {
+          label: 'Veröffentlicht',
+          color: '#4ade80',
+          bg: 'rgba(74, 222, 128, 0.12)',
+        };
+      default:
+        return {
+          label: status,
+          color: '#9a9590',
+          bg: 'rgba(154, 149, 144, 0.12)',
+        };
+    }
+  };
+
+  const formatDate = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  // Render Planner Tab Content
+  const renderPlannerTab = () => {
+    if (plannerLoading) {
+      return (
+        <div style={styles.loadingBox}>
+          <span style={styles.spinner}></span>
+          <span>
+            {autoPublishing
+              ? 'Veröffentliche fällige Beiträge...'
+              : 'Lade Planer...'}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div style={styles.plannerContent}>
+        {plannerError && <div style={styles.error}>{plannerError}</div>}
+
+        {/* Add new entry form */}
+        <div style={styles.plannerForm}>
+          <div style={styles.plannerFormRow}>
+            <div style={{ flex: 1 }}>
+              <label style={styles.label}>URL oder Keywords</label>
+              <input
+                type="text"
+                value={plannerInput}
+                onChange={(e) => setPlannerInput(e.target.value)}
+                placeholder="https://... oder Keywords eingeben"
+                style={styles.input}
+              />
+            </div>
+            <div style={{ width: '180px' }}>
+              <label style={styles.label}>Datum</label>
+              <input
+                type="date"
+                value={plannerDate}
+                onChange={(e) => setPlannerDate(e.target.value)}
+                style={styles.input}
+              />
+            </div>
+            <div style={{ alignSelf: 'flex-end' }}>
+              <button
+                onClick={handleAddScheduledPost}
+                disabled={!plannerInput.trim() || !plannerDate}
+                style={{
+                  ...styles.button,
+                  ...styles.generateButton,
+                  padding: '1rem 1.5rem',
+                  opacity: !plannerInput.trim() || !plannerDate ? 0.5 : 1,
+                  cursor:
+                    !plannerInput.trim() || !plannerDate
+                      ? 'not-allowed'
+                      : 'pointer',
+                }}
+              >
+                Hinzufügen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Post list */}
+        {scheduledPosts.length === 0 ? (
+          <div style={styles.emptyState}>
+            Noch keine Beiträge geplant. Füge oben einen neuen Eintrag hinzu.
+          </div>
+        ) : (
+          <div style={styles.plannerList}>
+            {scheduledPosts.map((post) => {
+              const badge = getStatusBadge(post.status);
+              const isGenerating = generatingId === post.id;
+              const isPublishing = publishingId === post.id;
+              const isBusy = isGenerating || isPublishing;
+
+              return (
+                <div key={post.id} style={styles.plannerCard}>
+                  <div style={styles.plannerCardHeader}>
+                    <div style={styles.plannerCardMeta}>
+                      <span style={styles.plannerDate}>
+                        {formatDate(post.scheduledDate)}
+                      </span>
+                      <span
+                        style={{
+                          ...styles.statusBadge,
+                          color: badge.color,
+                          background: badge.bg,
+                          borderColor: badge.color,
+                        }}
+                      >
+                        {badge.label}
+                      </span>
+                      <span style={styles.plannerInputType}>
+                        {post.inputType === 'url' ? 'URL' : 'Keywords'}
+                      </span>
+                    </div>
+                    <div style={styles.plannerCardActions}>
+                      {post.status === 'pending' && (
+                        <button
+                          onClick={() => handleGenerateScheduledPost(post.id)}
+                          disabled={isBusy}
+                          style={{
+                            ...styles.smallButton,
+                            ...styles.saveButton,
+                            opacity: isBusy ? 0.6 : 1,
+                          }}
+                        >
+                          {isGenerating ? (
+                            <span style={styles.buttonContent}>
+                              <span
+                                style={{
+                                  ...styles.spinner,
+                                  width: '12px',
+                                  height: '12px',
+                                }}
+                              ></span>
+                              Generiere...
+                            </span>
+                          ) : (
+                            'Generieren'
+                          )}
+                        </button>
+                      )}
+                      {post.status === 'generated' && (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleGenerateScheduledPost(post.id, 'text')
+                            }
+                            disabled={isBusy}
+                            style={{
+                              ...styles.smallButton,
+                              ...styles.editButton,
+                              opacity: isBusy ? 0.6 : 1,
+                            }}
+                          >
+                            {isGenerating && generatingMode === 'text' ? (
+                              <span style={styles.buttonContent}>
+                                <span
+                                  style={{
+                                    ...styles.spinner,
+                                    width: '12px',
+                                    height: '12px',
+                                  }}
+                                ></span>
+                                Text...
+                              </span>
+                            ) : (
+                              'Text neu'
+                            )}
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleGenerateScheduledPost(post.id, 'image')
+                            }
+                            disabled={isBusy}
+                            style={{
+                              ...styles.smallButton,
+                              ...styles.editButton,
+                              opacity: isBusy ? 0.6 : 1,
+                            }}
+                          >
+                            {isGenerating && generatingMode === 'image' ? (
+                              <span style={styles.buttonContent}>
+                                <span
+                                  style={{
+                                    ...styles.spinner,
+                                    width: '12px',
+                                    height: '12px',
+                                  }}
+                                ></span>
+                                Bild...
+                              </span>
+                            ) : (
+                              'Bild neu'
+                            )}
+                          </button>
+                          <a
+                            href={`/preview/${post.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              ...styles.smallButton,
+                              ...styles.previewLink,
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            Vorschau
+                          </a>
+                          <button
+                            onClick={() =>
+                              handlePublishScheduledPost(post.id)
+                            }
+                            disabled={isBusy}
+                            style={{
+                              ...styles.smallButton,
+                              background: 'var(--color-success, #4ade80)',
+                              color: '#000',
+                              fontWeight: 700,
+                              opacity: isBusy ? 0.6 : 1,
+                            }}
+                          >
+                            {isPublishing ? (
+                              <span style={styles.buttonContent}>
+                                <span
+                                  style={{
+                                    ...styles.spinner,
+                                    width: '12px',
+                                    height: '12px',
+                                    borderTopColor: '#000',
+                                  }}
+                                ></span>
+                                Veröffentliche...
+                              </span>
+                            ) : (
+                              'Jetzt Veröffentlichen'
+                            )}
+                          </button>
+                        </>
+                      )}
+                      {post.status !== 'published' && (
+                        <button
+                          onClick={() => handleDeleteScheduledPost(post.id)}
+                          disabled={isBusy}
+                          style={{
+                            ...styles.smallButton,
+                            ...styles.cancelButton,
+                            opacity: isBusy ? 0.6 : 1,
+                          }}
+                        >
+                          Löschen
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={styles.plannerCardBody}>
+                    <div style={styles.plannerInput}>{post.input}</div>
+
+                    {/* Preview generated image */}
+                    {post.generatedImageData && (
+                      <div style={styles.plannerImagePreview}>
+                        <img
+                          src={`data:image/webp;base64,${post.generatedImageData}`}
+                          alt={post.generatedImageAlt || ''}
+                          style={styles.plannerImage}
+                        />
+                        {post.generatedImageAlt && (
+                          <p style={styles.imageAlt}>
+                            {post.generatedImageAlt}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Preview generated content */}
+                    {post.generatedTitle && (
+                      <div style={styles.plannerPreview}>
+                        <div style={styles.frontmatterRow}>
+                          <span style={styles.frontmatterLabel}>Titel</span>
+                          <span style={styles.frontmatterValue}>
+                            {post.generatedTitle}
+                          </span>
+                        </div>
+                        {post.generatedDescription && (
+                          <div style={styles.frontmatterRow}>
+                            <span style={styles.frontmatterLabel}>
+                              Beschreibung
+                            </span>
+                            <span style={styles.frontmatterValue}>
+                              {post.generatedDescription}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {post.publishedPath && (
+                      <div style={styles.plannerPublishedPath}>
+                        {post.publishedPath}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleEditPrompt = (id: string, currentValue: string) => {
@@ -179,11 +726,13 @@ export default function Editor() {
   const getPromptLabel = (id: string): string => {
     const labels: Record<string, string> = {
       system_prompt: 'System Prompt',
+      user_prompt_template: 'User Prompt Vorlage',
       source_analysis: 'Quellen-Analyse',
       keyword_research: 'Keyword-Recherche',
       cta_prompt: 'CTA Generierung',
       image_prompt: 'Bild-Prompt',
       filename_prompt: 'Dateiname-Prompt',
+      alt_text_template: 'Alt-Text Vorlage',
     };
     return labels[id] || id;
   };
@@ -361,6 +910,132 @@ export default function Editor() {
   const isLoading =
     generating || regeneratingText || regeneratingImage || publishing;
 
+  // Render a single settings card (prompt or setting)
+  const renderSettingsCard = (item: {
+    type: 'setting' | 'prompt';
+    id: string;
+  }) => {
+    if (item.type === 'prompt') {
+      const prompt = prompts.find((p) => p.id === item.id);
+      if (!prompt) return null;
+      const isEditing = editingPrompt === prompt.id;
+
+      return (
+        <div key={prompt.id} style={styles.settingsCard}>
+          <div style={styles.settingsCardHeader}>
+            <span style={styles.settingsItemLabel}>
+              {getPromptLabel(prompt.id)}
+            </span>
+            <span style={styles.settingsItemCategory}>{prompt.category}</span>
+          </div>
+          {isEditing ? (
+            <div style={styles.editArea}>
+              <textarea
+                value={editValues[prompt.id] || ''}
+                onChange={(e) =>
+                  setEditValues({
+                    ...editValues,
+                    [prompt.id]: e.target.value,
+                  })
+                }
+                style={styles.textarea}
+                rows={10}
+              />
+              <div style={styles.editButtons}>
+                <button
+                  onClick={() => handleSavePrompt(prompt.id)}
+                  disabled={savingId === prompt.id}
+                  style={{
+                    ...styles.smallButton,
+                    ...styles.saveButton,
+                    opacity: savingId === prompt.id ? 0.6 : 1,
+                  }}
+                >
+                  {savingId === prompt.id ? 'Speichert...' : 'Speichern'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  style={{ ...styles.smallButton, ...styles.cancelButton }}
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={styles.settingsItemValue}>
+              <pre style={styles.cardPreview}>{prompt.promptText}</pre>
+              <button
+                onClick={() => handleEditPrompt(prompt.id, prompt.promptText)}
+                style={{ ...styles.smallButton, ...styles.editButton }}
+              >
+                Bearbeiten
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Setting item
+    const setting = settings.find((s) => s.key === item.id);
+    if (!setting) return null;
+    const isEditing = editingSetting === setting.key;
+
+    return (
+      <div key={setting.key} style={styles.settingsCard}>
+        <div style={styles.settingsCardHeader}>
+          <span style={styles.settingsItemLabel}>
+            {getSettingLabel(setting.key)}
+          </span>
+        </div>
+        {isEditing ? (
+          <div style={styles.editArea}>
+            <textarea
+              value={editValues[setting.key] || ''}
+              onChange={(e) =>
+                setEditValues({
+                  ...editValues,
+                  [setting.key]: e.target.value,
+                })
+              }
+              style={styles.textarea}
+              rows={setting.key === 'imprint_content' ? 12 : 3}
+            />
+            <div style={styles.editButtons}>
+              <button
+                onClick={() => handleSaveSetting(setting.key)}
+                disabled={savingId === setting.key}
+                style={{
+                  ...styles.smallButton,
+                  ...styles.saveButton,
+                  opacity: savingId === setting.key ? 0.6 : 1,
+                }}
+              >
+                {savingId === setting.key ? 'Speichert...' : 'Speichern'}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                style={{ ...styles.smallButton, ...styles.cancelButton }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={styles.settingsItemValue}>
+            <pre style={styles.cardPreview}>{setting.value}</pre>
+            <button
+              onClick={() => handleEditSetting(setting.key, setting.value)}
+              style={{ ...styles.smallButton, ...styles.editButton }}
+            >
+              Bearbeiten
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render Settings Tab Content
   const renderSettingsTab = () => {
     if (settingsLoading) {
@@ -372,148 +1047,65 @@ export default function Editor() {
       );
     }
 
+    const activeGroup = SETTINGS_GROUPS.find(
+      (g) => g.key === activeSettingsTab
+    );
+
     return (
       <div style={styles.settingsContent}>
         {settingsError && <div style={styles.error}>{settingsError}</div>}
 
-        {/* AI Prompts Section */}
-        <div style={styles.settingsSection}>
-          <h3 style={styles.sectionTitle}>AI Prompts</h3>
-          {prompts.map((prompt) => (
-            <div key={prompt.id} style={styles.settingsItem}>
-              <div style={styles.settingsItemHeader}>
-                <span style={styles.settingsItemLabel}>
-                  {getPromptLabel(prompt.id)}
-                </span>
-                <span style={styles.settingsItemCategory}>
-                  {prompt.category}
-                </span>
-              </div>
-              {editingPrompt === prompt.id ? (
-                <div style={styles.editArea}>
-                  <textarea
-                    value={editValues[prompt.id] || ''}
-                    onChange={(e) =>
-                      setEditValues({
-                        ...editValues,
-                        [prompt.id]: e.target.value,
-                      })
-                    }
-                    style={styles.textarea}
-                    rows={8}
-                  />
-                  <div style={styles.editButtons}>
-                    <button
-                      onClick={() => handleSavePrompt(prompt.id)}
-                      disabled={savingId === prompt.id}
-                      style={{
-                        ...styles.smallButton,
-                        ...styles.saveButton,
-                        opacity: savingId === prompt.id ? 0.6 : 1,
-                      }}
-                    >
-                      {savingId === prompt.id ? 'Speichert...' : 'Speichern'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      style={{ ...styles.smallButton, ...styles.cancelButton }}
-                    >
-                      Abbrechen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.settingsItemValue}>
-                  <pre style={styles.promptPreview}>
-                    {prompt.promptText.slice(0, 200)}
-                    {prompt.promptText.length > 200 ? '...' : ''}
-                  </pre>
-                  <button
-                    onClick={() =>
-                      handleEditPrompt(prompt.id, prompt.promptText)
-                    }
-                    style={{ ...styles.smallButton, ...styles.editButton }}
-                  >
-                    Bearbeiten
-                  </button>
-                </div>
-              )}
-            </div>
+        {/* Sub-tab navigation */}
+        <div style={styles.subTabNav}>
+          {SETTINGS_GROUPS.map((group) => (
+            <button
+              key={group.key}
+              onClick={() => setActiveSettingsTab(group.key)}
+              style={{
+                ...styles.subTab,
+                ...(activeSettingsTab === group.key ? styles.subTabActive : {}),
+              }}
+            >
+              {group.label}
+            </button>
           ))}
         </div>
 
-        {/* Site Settings Section */}
-        <div style={styles.settingsSection}>
-          <h3 style={styles.sectionTitle}>Website-Einstellungen</h3>
-          {settings.map((setting) => (
-            <div key={setting.key} style={styles.settingsItem}>
-              <div style={styles.settingsItemHeader}>
-                <span style={styles.settingsItemLabel}>
-                  {getSettingLabel(setting.key)}
-                </span>
-              </div>
-              {editingSetting === setting.key ? (
-                <div style={styles.editArea}>
-                  <textarea
-                    value={editValues[setting.key] || ''}
-                    onChange={(e) =>
-                      setEditValues({
-                        ...editValues,
-                        [setting.key]: e.target.value,
-                      })
-                    }
-                    style={styles.textarea}
-                    rows={setting.key === 'imprint_content' ? 12 : 3}
-                  />
-                  <div style={styles.editButtons}>
-                    <button
-                      onClick={() => handleSaveSetting(setting.key)}
-                      disabled={savingId === setting.key}
-                      style={{
-                        ...styles.smallButton,
-                        ...styles.saveButton,
-                        opacity: savingId === setting.key ? 0.6 : 1,
-                      }}
-                    >
-                      {savingId === setting.key ? 'Speichert...' : 'Speichern'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      style={{ ...styles.smallButton, ...styles.cancelButton }}
-                    >
-                      Abbrechen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.settingsItemValue}>
-                  <pre style={styles.settingPreview}>
-                    {setting.value.slice(0, 150)}
-                    {setting.value.length > 150 ? '...' : ''}
-                  </pre>
-                  <button
-                    onClick={() =>
-                      handleEditSetting(setting.key, setting.value)
-                    }
-                    style={{ ...styles.smallButton, ...styles.editButton }}
-                  >
-                    Bearbeiten
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Card grid for active group */}
+        {activeGroup && (
+          <div style={styles.cardGrid}>
+            {activeGroup.items.map((item) => renderSettingsCard(item))}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.panel}>
+    <div
+      style={{
+        ...styles.container,
+        gridTemplateColumns:
+          activeTab === 'settings' || activeTab === 'planner'
+            ? '1fr'
+            : '380px 1fr',
+      }}
+    >
+      <div
+        style={{
+          ...styles.panel,
+          ...(activeTab === 'settings' || activeTab === 'planner'
+            ? styles.panelFullWidth
+            : {}),
+        }}
+      >
         <div style={styles.headerRow}>
           <h2 style={styles.heading}>
-            {activeTab === 'generate' ? 'Content Generator' : 'Einstellungen'}
+            {activeTab === 'generate'
+              ? 'Content Generator'
+              : activeTab === 'planner'
+                ? 'Content Planer'
+                : 'Einstellungen'}
           </h2>
           <button onClick={handleLogout} style={styles.logoutButton}>
             Logout
@@ -532,6 +1124,15 @@ export default function Editor() {
             Generieren
           </button>
           <button
+            onClick={() => setActiveTab('planner')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'planner' ? styles.tabActive : {}),
+            }}
+          >
+            Planer
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             style={{
               ...styles.tab,
@@ -541,6 +1142,9 @@ export default function Editor() {
             Einstellungen
           </button>
         </div>
+
+        {/* Planner Tab */}
+        {activeTab === 'planner' && renderPlannerTab()}
 
         {/* Settings Tab */}
         {activeTab === 'settings' && renderSettingsTab()}
@@ -1084,37 +1688,54 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text, #faf9f7)',
   },
   // Settings Tab
+  panelFullWidth: {
+    maxWidth: '100%',
+  },
   settingsContent: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '1.5rem',
   },
-  settingsSection: {
+  subTabNav: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    gap: '0.375rem',
+    flexWrap: 'wrap' as const,
+  },
+  subTab: {
+    padding: '0.5rem 1rem',
+    background: 'transparent',
+    border: '1px solid var(--color-border, #2a2a2e)',
+    borderRadius: '9999px',
+    color: 'var(--color-text-muted, #9a9590)',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap' as const,
+  },
+  subTabActive: {
+    background: 'var(--color-surface-elevated, #1a1a1d)',
+    color: 'var(--color-text, #faf9f7)',
+    borderColor: 'var(--color-border-accent, #3a3a40)',
+  },
+  cardGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
     gap: '1rem',
   },
-  sectionTitle: {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.12em',
-    color: 'var(--color-text-muted, #9a9590)',
-    marginBottom: '0.5rem',
-    paddingBottom: '0.5rem',
-    borderBottom: '1px solid var(--color-border, #2a2a2e)',
-  },
-  settingsItem: {
+  settingsCard: {
     background: 'var(--color-bg, #0a0a0b)',
-    borderRadius: '8px',
-    padding: '1rem',
+    borderRadius: '12px',
+    padding: '1.25rem',
     border: '1px solid var(--color-border, #2a2a2e)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
   },
-  settingsItemHeader: {
+  settingsCardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '0.75rem',
   },
   settingsItemLabel: {
     fontSize: '0.875rem',
@@ -1136,7 +1757,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column' as const,
     gap: '0.75rem',
   },
-  promptPreview: {
+  cardPreview: {
     fontSize: '0.8rem',
     fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
     color: 'var(--color-text-muted, #9a9590)',
@@ -1144,14 +1765,8 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
     lineHeight: 1.5,
-  },
-  settingPreview: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-accent, #e8e6e1)',
-    margin: 0,
-    whiteSpace: 'pre-wrap' as const,
-    wordBreak: 'break-word' as const,
-    lineHeight: 1.5,
+    maxHeight: '200px',
+    overflow: 'auto',
   },
   editArea: {
     display: 'flex',
@@ -1205,5 +1820,130 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.75rem',
     padding: '2rem',
     color: 'var(--color-text-muted, #9a9590)',
+  },
+  // Planner styles
+  plannerContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1.5rem',
+  },
+  plannerForm: {
+    background: 'var(--color-bg, #0a0a0b)',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    border: '1px solid var(--color-border, #2a2a2e)',
+  },
+  plannerFormRow: {
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'flex-end',
+  },
+  plannerList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
+  },
+  plannerCard: {
+    background: 'var(--color-bg, #0a0a0b)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border, #2a2a2e)',
+    overflow: 'hidden',
+  },
+  plannerCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid var(--color-border, #2a2a2e)',
+    background: 'var(--color-surface-elevated, #1a1a1d)',
+    flexWrap: 'wrap' as const,
+    gap: '0.75rem',
+  },
+  plannerCardMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  plannerDate: {
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    color: 'var(--color-text, #faf9f7)',
+    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+  },
+  statusBadge: {
+    padding: '0.2rem 0.5rem',
+    borderRadius: '9999px',
+    fontSize: '0.65rem',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    border: '1px solid',
+  },
+  plannerInputType: {
+    fontSize: '0.65rem',
+    fontWeight: 500,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    padding: '0.2rem 0.5rem',
+    background: 'var(--color-surface, #141416)',
+    borderRadius: '4px',
+    color: 'var(--color-text-muted, #9a9590)',
+  },
+  plannerCardActions: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap' as const,
+  },
+  plannerCardBody: {
+    padding: '1rem 1.25rem',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
+  },
+  plannerInput: {
+    fontSize: '0.9rem',
+    color: 'var(--color-text-accent, #e8e6e1)',
+    wordBreak: 'break-all' as const,
+  },
+  plannerImagePreview: {
+    borderRadius: '8px',
+    overflow: 'hidden',
+    background: 'var(--color-bg, #0a0a0b)',
+    textAlign: 'center' as const,
+  },
+  plannerImage: {
+    maxWidth: '100%',
+    maxHeight: '250px',
+    borderRadius: '8px',
+    objectFit: 'cover' as const,
+  },
+  plannerPreview: {
+    padding: '0.75rem',
+    background: 'var(--color-surface, #141416)',
+    borderRadius: '8px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.5rem',
+  },
+  plannerPublishedPath: {
+    fontSize: '0.75rem',
+    fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
+    color: 'var(--color-success, #4ade80)',
+    padding: '0.5rem 0.75rem',
+    background: 'rgba(74, 222, 128, 0.08)',
+    borderRadius: '6px',
+  },
+  previewLink: {
+    background: 'var(--color-surface-accent, #222226)',
+    color: 'var(--color-text, #faf9f7)',
+  },
+  emptyState: {
+    textAlign: 'center' as const,
+    padding: '3rem 1.5rem',
+    color: 'var(--color-text-muted, #9a9590)',
+    fontSize: '0.9rem',
+    background: 'var(--color-bg, #0a0a0b)',
+    borderRadius: '12px',
+    border: '1px dashed var(--color-border, #2a2a2e)',
   },
 };

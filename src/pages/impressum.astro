@@ -1,7 +1,7 @@
 ---
 import { db, SiteSettings, eq } from 'astro:db';
-import { marked } from 'marked';
 import Layout from '../layouts/Layout.astro';
+import { renderMarkdown } from '../utils/markdown';
 
 // Load impressum content from database (single markdown field)
 const result = await db
@@ -10,7 +10,7 @@ const result = await db
   .where(eq(SiteSettings.key, 'imprint_content'))
   .get();
 const imprintMarkdown = result?.value ?? '';
-const imprintHtml = await marked(imprintMarkdown);
+const imprintHtml = await renderMarkdown(imprintMarkdown);
 ---
 
 <Layout

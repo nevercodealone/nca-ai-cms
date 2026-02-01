@@ -70,7 +70,7 @@ export class ImageGenerator {
   }
 
   private buildPrompt(title: string): string {
-    return `Blog header image about "${title}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people, no text.`;
+    return `Blog header image about "${title}" for a web accessibility article. Minimal Precisionism style inspired by Charles Sheeler: clean geometric shapes, sharp focus, smooth surfaces, no people. IMPORTANT: absolutely no text, no letters, no words, no typography, no labels, no captions anywhere in the image.`;
   }
 
   private generateAlt(title: string): string {
