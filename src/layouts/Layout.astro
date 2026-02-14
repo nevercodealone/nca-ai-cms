@@ -63,6 +63,7 @@ const isAuthenticated = !!authCookie?.value;
         --color-primary: #e63946;
         --color-primary-hover: #d62839;
         --color-primary-dark: #b82d38;
+        --color-primary-readable: #f25d68;
         --color-primary-muted: rgba(230, 57, 70, 0.12);
         --color-primary-glow: rgba(230, 57, 70, 0.35);
 
@@ -288,6 +289,42 @@ const isAuthenticated = !!authCookie?.value;
 
       ::-webkit-scrollbar-thumb:hover {
         background: var(--color-text-muted);
+      }
+
+      /* Skip Link */
+      .skip-link {
+        position: absolute;
+        top: -100%;
+        left: var(--gutter);
+        z-index: 10000;
+        padding: var(--space-3) var(--space-6);
+        background: var(--color-primary);
+        color: #fff;
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        transition: top var(--transition-fast);
+      }
+
+      .skip-link:focus {
+        top: 0;
+        outline: 2px solid var(--color-text);
+        outline-offset: 2px;
+      }
+
+      /* Screen reader only */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
       }
 
       /* Container */
@@ -719,7 +756,7 @@ const isAuthenticated = !!authCookie?.value;
       }
 
       .footer-legal a {
-        color: var(--color-primary);
+        color: var(--color-primary-readable);
         text-decoration: none;
       }
 
@@ -736,6 +773,7 @@ const isAuthenticated = !!authCookie?.value;
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="logo">
@@ -781,7 +819,7 @@ const isAuthenticated = !!authCookie?.value;
         </nav>
       </div>
     </header>
-    <main class="site-main">
+    <main class="site-main" id="main-content">
       <slot />
     </main>
     <footer class="site-footer">
@@ -798,7 +836,7 @@ const isAuthenticated = !!authCookie?.value;
           POC Projekt von <a
             href="https://nevercodealone.de"
             target="_blank"
-            rel="noopener">Never Code Alone</a
+            rel="noopener">Never Code Alone<span class="sr-only"> (öffnet in neuem Tab)</span></a
           >
         </div>
       </div>
