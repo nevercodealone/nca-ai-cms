@@ -345,7 +345,7 @@ export default function Editor() {
     if (plannerLoading) {
       return (
         <div style={styles.loadingBox}>
-          <span style={styles.spinner}></span>
+          <span style={styles.spinner} aria-hidden="true"></span>
           <span>
             {autoPublishing
               ? 'Veröffentliche fällige Beiträge...'
@@ -357,15 +357,16 @@ export default function Editor() {
 
     return (
       <div style={styles.plannerContent}>
-        {plannerError && <div style={styles.error}>{plannerError}</div>}
+        {plannerError && <div style={styles.error} role="alert">{plannerError}</div>}
 
         {/* Add new entry form */}
         <div style={styles.plannerForm}>
           <div style={styles.plannerFormRow}>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>URL oder Keywords</label>
+              <label htmlFor="planner-input" style={styles.label}>URL oder Keywords</label>
               <input
                 type="text"
+                id="planner-input"
                 value={plannerInput}
                 onChange={(e) => setPlannerInput(e.target.value)}
                 placeholder="https://... oder Keywords eingeben"
@@ -373,9 +374,10 @@ export default function Editor() {
               />
             </div>
             <div style={{ width: '180px' }}>
-              <label style={styles.label}>Datum</label>
+              <label htmlFor="planner-date" style={styles.label}>Datum</label>
               <input
                 type="date"
+                id="planner-date"
                 value={plannerDate}
                 onChange={(e) => setPlannerDate(e.target.value)}
                 style={styles.input}
@@ -450,6 +452,7 @@ export default function Editor() {
                           {isGenerating ? (
                             <span style={styles.buttonContent}>
                               <span
+                                aria-hidden="true"
                                 style={{
                                   ...styles.spinner,
                                   width: '12px',
@@ -547,6 +550,7 @@ export default function Editor() {
                             {isPublishing ? (
                               <span style={styles.buttonContent}>
                                 <span
+                                  aria-hidden="true"
                                   style={{
                                     ...styles.spinner,
                                     width: '12px',
@@ -910,6 +914,52 @@ export default function Editor() {
   const isLoading =
     generating || regeneratingText || regeneratingImage || publishing;
 
+  // Status text for ARIA live region
+  const getStatusText = (): string => {
+    if (generating) return 'Generiere Bild und Text...';
+    if (regeneratingText) return 'Generiere Text neu...';
+    if (regeneratingImage) return 'Generiere Bild neu...';
+    if (publishing) return 'Veröffentliche Artikel...';
+    if (published) return 'Artikel erfolgreich veröffentlicht.';
+    if (error) return `Fehler: ${error}`;
+    if (hasContent) return 'Inhalt wurde generiert.';
+    return '';
+  };
+
+  // Keyboard navigation for tabs
+  const handleTabKeyDown = (
+    e: React.KeyboardEvent,
+    tabs: readonly string[],
+    currentTab: string,
+    setTab: (tab: string) => void
+  ) => {
+    const currentIndex = tabs.indexOf(currentTab);
+    let newIndex = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      newIndex = (currentIndex + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      newIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      newIndex = tabs.length - 1;
+    }
+    if (newIndex >= 0 && tabs[newIndex] !== undefined) {
+      setTab(tabs[newIndex] as string);
+      // Focus the new tab button
+      const tabList = (e.currentTarget as HTMLElement).parentElement;
+      const buttons = tabList?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+      buttons?.[newIndex]?.focus();
+    }
+  };
+
+  const mainTabs = ['generate', 'planner', 'settings'] as const;
+  const settingsTabKeys = SETTINGS_GROUPS.map((g) => g.key) as readonly string[];
+
   // Render a single settings card (prompt or setting)
   const renderSettingsCard = (item: {
     type: 'setting' | 'prompt';
@@ -931,6 +981,7 @@ export default function Editor() {
           {isEditing ? (
             <div style={styles.editArea}>
               <textarea
+                aria-label={getPromptLabel(prompt.id)}
                 value={editValues[prompt.id] || ''}
                 onChange={(e) =>
                   setEditValues({
@@ -991,6 +1042,7 @@ export default function Editor() {
         {isEditing ? (
           <div style={styles.editArea}>
             <textarea
+              aria-label={getSettingLabel(setting.key)}
               value={editValues[setting.key] || ''}
               onChange={(e) =>
                 setEditValues({
@@ -1041,7 +1093,7 @@ export default function Editor() {
     if (settingsLoading) {
       return (
         <div style={styles.loadingBox}>
-          <span style={styles.spinner}></span>
+          <span style={styles.spinner} aria-hidden="true"></span>
           <span>Lade Einstellungen...</span>
         </div>
       );
@@ -1053,14 +1105,24 @@ export default function Editor() {
 
     return (
       <div style={styles.settingsContent}>
-        {settingsError && <div style={styles.error}>{settingsError}</div>}
+        {settingsError && <div style={styles.error} role="alert">{settingsError}</div>}
 
         {/* Sub-tab navigation */}
-        <div style={styles.subTabNav}>
+        <div style={styles.subTabNav} role="tablist" aria-label="Einstellungskategorien">
           {SETTINGS_GROUPS.map((group) => (
             <button
               key={group.key}
+              role="tab"
+              id={`settings-tab-${group.key}`}
+              aria-selected={activeSettingsTab === group.key}
+              aria-controls={`settings-panel-${group.key}`}
+              tabIndex={activeSettingsTab === group.key ? 0 : -1}
               onClick={() => setActiveSettingsTab(group.key)}
+              onKeyDown={(e) =>
+                handleTabKeyDown(e, settingsTabKeys, activeSettingsTab, (t) =>
+                  setActiveSettingsTab(t as SettingsSubTab)
+                )
+              }
               style={{
                 ...styles.subTab,
                 ...(activeSettingsTab === group.key ? styles.subTabActive : {}),
@@ -1073,7 +1135,12 @@ export default function Editor() {
 
         {/* Card grid for active group */}
         {activeGroup && (
-          <div style={styles.cardGrid}>
+          <div
+            role="tabpanel"
+            id={`settings-panel-${activeGroup.key}`}
+            aria-labelledby={`settings-tab-${activeGroup.key}`}
+            style={styles.cardGrid}
+          >
             {activeGroup.items.map((item) => renderSettingsCard(item))}
           </div>
         )}
@@ -1091,6 +1158,9 @@ export default function Editor() {
             : '380px 1fr',
       }}
     >
+      <div aria-live="polite" style={styles.srOnly}>
+        {getStatusText()}
+      </div>
       <div
         style={{
           ...styles.panel,
@@ -1113,9 +1183,19 @@ export default function Editor() {
         </div>
 
         {/* Tab Navigation */}
-        <div style={styles.tabNav}>
+        <div style={styles.tabNav} role="tablist" aria-label="Editor-Bereiche">
           <button
+            role="tab"
+            id="tab-generate"
+            aria-selected={activeTab === 'generate'}
+            aria-controls="tabpanel-generate"
+            tabIndex={activeTab === 'generate' ? 0 : -1}
             onClick={() => setActiveTab('generate')}
+            onKeyDown={(e) =>
+              handleTabKeyDown(e, mainTabs, activeTab, (t) =>
+                setActiveTab(t as TabType)
+              )
+            }
             style={{
               ...styles.tab,
               ...(activeTab === 'generate' ? styles.tabActive : {}),
@@ -1124,7 +1204,17 @@ export default function Editor() {
             Generieren
           </button>
           <button
+            role="tab"
+            id="tab-planner"
+            aria-selected={activeTab === 'planner'}
+            aria-controls="tabpanel-planner"
+            tabIndex={activeTab === 'planner' ? 0 : -1}
             onClick={() => setActiveTab('planner')}
+            onKeyDown={(e) =>
+              handleTabKeyDown(e, mainTabs, activeTab, (t) =>
+                setActiveTab(t as TabType)
+              )
+            }
             style={{
               ...styles.tab,
               ...(activeTab === 'planner' ? styles.tabActive : {}),
@@ -1133,7 +1223,17 @@ export default function Editor() {
             Planer
           </button>
           <button
+            role="tab"
+            id="tab-settings"
+            aria-selected={activeTab === 'settings'}
+            aria-controls="tabpanel-settings"
+            tabIndex={activeTab === 'settings' ? 0 : -1}
             onClick={() => setActiveTab('settings')}
+            onKeyDown={(e) =>
+              handleTabKeyDown(e, mainTabs, activeTab, (t) =>
+                setActiveTab(t as TabType)
+              )
+            }
             style={{
               ...styles.tab,
               ...(activeTab === 'settings' ? styles.tabActive : {}),
@@ -1144,14 +1244,22 @@ export default function Editor() {
         </div>
 
         {/* Planner Tab */}
-        {activeTab === 'planner' && renderPlannerTab()}
+        {activeTab === 'planner' && (
+          <div role="tabpanel" id="tabpanel-planner" aria-labelledby="tab-planner">
+            {renderPlannerTab()}
+          </div>
+        )}
 
         {/* Settings Tab */}
-        {activeTab === 'settings' && renderSettingsTab()}
+        {activeTab === 'settings' && (
+          <div role="tabpanel" id="tabpanel-settings" aria-labelledby="tab-settings">
+            {renderSettingsTab()}
+          </div>
+        )}
 
         {/* Generate Tab */}
         {activeTab === 'generate' && (
-          <>
+          <div role="tabpanel" id="tabpanel-generate" aria-labelledby="tab-generate">
             {/* Published State */}
             {published ? (
               <div style={styles.successBox}>
@@ -1180,9 +1288,10 @@ export default function Editor() {
               <>
                 {/* Input Field */}
                 <div style={styles.field}>
-                  <label style={styles.label}>URL oder Thema</label>
+                  <label htmlFor="content-input" style={styles.label}>URL oder Thema</label>
                   <input
                     type="text"
+                    id="content-input"
                     value={input}
                     onChange={(e) => handleInputChange(e.target.value)}
                     placeholder="https://... oder Keywords eingeben"
@@ -1212,7 +1321,7 @@ export default function Editor() {
                   >
                     {generating ? (
                       <span style={styles.buttonContent}>
-                        <span style={styles.spinner}></span>
+                        <span style={styles.spinner} aria-hidden="true"></span>
                         Generiere Bild & Text...
                       </span>
                     ) : (
@@ -1263,7 +1372,7 @@ export default function Editor() {
                     >
                       {publishing ? (
                         <span style={styles.buttonContent}>
-                          <span style={styles.spinner}></span>
+                          <span style={styles.spinner} aria-hidden="true"></span>
                           Veröffentliche...
                         </span>
                       ) : (
@@ -1275,8 +1384,8 @@ export default function Editor() {
               </>
             )}
 
-            {error && <div style={styles.error}>{error}</div>}
-          </>
+            {error && <div style={styles.error} role="alert">{error}</div>}
+          </div>
         )}
       </div>
 
@@ -1936,6 +2045,17 @@ const styles: Record<string, React.CSSProperties> = {
   previewLink: {
     background: 'var(--color-surface-accent, #222226)',
     color: 'var(--color-text, #faf9f7)',
+  },
+  srOnly: {
+    position: 'absolute' as const,
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap' as const,
+    borderWidth: 0,
   },
   emptyState: {
     textAlign: 'center' as const,
