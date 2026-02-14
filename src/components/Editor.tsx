@@ -1524,7 +1524,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: '1px solid var(--color-border-accent, #3a3a40)',
     borderRadius: '6px',
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
     cursor: 'pointer',
     fontSize: '0.75rem',
     fontWeight: 500,
@@ -1538,7 +1538,7 @@ const styles: Record<string, React.CSSProperties> = {
   label: {
     display: 'block',
     marginBottom: '0.75rem',
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
     fontSize: '0.75rem',
     fontWeight: 600,
     textTransform: 'uppercase' as const,
@@ -1558,7 +1558,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
     marginTop: '0.5rem',
     fontSize: '0.75rem',
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
   },
   button: {
     padding: '1rem 1.25rem',
@@ -1642,7 +1642,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text, #faf9f7)',
   },
   successPath: {
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
     fontSize: '0.875rem',
     fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
     marginBottom: '2rem',
@@ -1713,7 +1713,7 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.05em',
   },
   filepath: {
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
     fontSize: '0.75rem',
     fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
   },
@@ -1734,7 +1734,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.1em',
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
   },
   frontmatterValue: {
     fontSize: '0.9rem',
@@ -1767,7 +1767,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   imageAlt: {
     marginTop: '0.75rem',
-    color: 'var(--color-text-muted, #706d68)',
+    color: 'var(--color-text-muted, #b8b5b0)',
     fontSize: '0.875rem',
     fontStyle: 'italic' as const,
   },
