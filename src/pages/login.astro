@@ -53,7 +53,7 @@ if (authCookie?.value) {
               placeholder="Dein Passwort"
             />
           </div>
-          <div id="error" class="error"></div>
+          <div id="error" class="error" role="alert" aria-live="assertive"></div>
           <button type="submit" class="submit-button glow-primary">
             <span class="button-text">Anmelden</span>
             <svg
@@ -261,13 +261,13 @@ if (authCookie?.value) {
     gap: var(--space-3);
     width: 100%;
     padding: var(--space-4) var(--space-6);
-    background: var(--color-primary);
+    background: var(--color-primary-dark);
     border: none;
     border-radius: var(--radius-md);
     color: white;
     font-family: var(--font-ui);
     font-size: var(--text-base);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--tracking-wider);
     cursor: pointer;

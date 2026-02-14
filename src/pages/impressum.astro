@@ -50,7 +50,7 @@ const imprintHtml = await renderMarkdown(imprintMarkdown);
     max-width: var(--content-max);
   }
 
-  .prose h2 {
+  .prose :global(h2) {
     font-family: var(--font-display);
     font-size: var(--text-2xl);
     font-weight: 600;
@@ -59,11 +59,11 @@ const imprintHtml = await renderMarkdown(imprintMarkdown);
     margin-bottom: var(--space-4);
   }
 
-  .prose h2:first-child {
+  .prose :global(h2:first-child) {
     margin-top: 0;
   }
 
-  .prose p {
+  .prose :global(p) {
     font-family: var(--font-body);
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
@@ -71,18 +71,18 @@ const imprintHtml = await renderMarkdown(imprintMarkdown);
     margin-bottom: var(--space-4);
   }
 
-  .prose a {
-    color: var(--color-primary);
-    text-decoration: none;
+  .prose :global(a) {
+    color: var(--color-primary-readable);
+    text-decoration: underline;
     font-weight: 500;
     transition: color var(--transition-fast);
   }
 
-  .prose a:hover {
+  .prose :global(a:hover) {
     color: var(--color-primary-hover);
   }
 
-  .prose strong {
+  .prose :global(strong) {
     color: var(--color-text);
     font-weight: 600;
   }
