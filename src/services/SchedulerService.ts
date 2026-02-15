@@ -21,6 +21,13 @@ export interface CreateScheduledPostInput {
 export class SchedulerService {
   constructor(private readonly db: SchedulerDBAdapter) {}
 
+  private async requireGeneratable(id: string, action: string): Promise<void> {
+    const post = await this.getById(id);
+    if (!post.canGenerate()) {
+      throw new Error(`Cannot ${action}: post is in status "${post.status}"`);
+    }
+  }
+
   async create(data: CreateScheduledPostInput): Promise<ScheduledPost> {
     // Check for duplicate date
     const existing = await this.db.getByDate(data.scheduledDate);
@@ -82,10 +89,7 @@ export class SchedulerService {
       imageAlt?: string | undefined;
     }
   ): Promise<void> {
-    const post = await this.getById(id);
-    if (!post.canGenerate()) {
-      throw new Error(`Cannot generate: post is in status "${post.status}"`);
-    }
+    await this.requireGeneratable(id, 'generate');
 
     await this.db.update(id, {
       status: 'generated' as ScheduledPostStatus,
@@ -107,10 +111,7 @@ export class SchedulerService {
       tags: string[];
     }
   ): Promise<void> {
-    const post = await this.getById(id);
-    if (!post.canGenerate()) {
-      throw new Error(`Cannot regenerate: post is in status "${post.status}"`);
-    }
+    await this.requireGeneratable(id, 'regenerate');
 
     await this.db.update(id, {
       status: 'generated' as ScheduledPostStatus,
@@ -125,10 +126,7 @@ export class SchedulerService {
     id: string,
     data: { imageData: string; imageAlt: string }
   ): Promise<void> {
-    const post = await this.getById(id);
-    if (!post.canGenerate()) {
-      throw new Error(`Cannot regenerate: post is in status "${post.status}"`);
-    }
+    await this.requireGeneratable(id, 'regenerate');
 
     await this.db.update(id, {
       status: 'generated' as ScheduledPostStatus,

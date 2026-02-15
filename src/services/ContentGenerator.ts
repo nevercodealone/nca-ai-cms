@@ -65,6 +65,34 @@ Titel-Regeln:
 - Zeige den Nutzen/Benefit (z.B. "So vermeidest du...", "Warum X wichtig ist")
 - Wecke Neugier oder löse ein Problem`;
 
+function buildSourceAnalysisSchema() {
+  return {
+    type: SchemaType.OBJECT as const,
+    properties: {
+      topic: {
+        type: SchemaType.STRING,
+        description: 'Das Hauptthema in 2-5 Wörtern',
+      },
+      keyPoints: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+        description: 'Die wichtigsten Kernaussagen/Fakten',
+      },
+      uniqueInsights: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+        description: 'Besondere/einzigartige Erkenntnisse oder Tipps',
+      },
+      codeExamples: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+        description: 'Wichtige Code-Beispiele oder Patterns',
+      },
+    },
+    required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
+  } satisfies import('@google/generative-ai').Schema;
+}
+
 export class ContentGenerator {
   private client: GoogleGenerativeAI;
   private model: string;
@@ -124,33 +152,7 @@ export class ContentGenerator {
       model: this.model,
       generationConfig: {
         responseMimeType: 'application/json',
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            topic: {
-              type: SchemaType.STRING,
-              description: 'Das Hauptthema des Artikels in 2-5 Wörtern',
-            },
-            keyPoints: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description: 'Die wichtigsten Kernaussagen (3-5 Punkte)',
-            },
-            uniqueInsights: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description:
-                'Besondere/einzigartige Erkenntnisse oder Tipps aus dem Artikel',
-            },
-            codeExamples: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description:
-                'Wichtige Code-Beispiele oder Patterns aus dem Artikel',
-            },
-          },
-          required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
-        },
+        responseSchema: buildSourceAnalysisSchema(),
       },
     });
 
@@ -178,35 +180,7 @@ Identifiziere:
       model: this.model,
       generationConfig: {
         responseMimeType: 'application/json',
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            topic: {
-              type: SchemaType.STRING,
-              description:
-                'Das Hauptthema basierend auf den Keywords in 2-5 Wörtern',
-            },
-            keyPoints: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description:
-                'Die wichtigsten Fakten und Best Practices zum Thema (5-7 Punkte)',
-            },
-            uniqueInsights: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description:
-                'Weniger bekannte aber wichtige Erkenntnisse oder Experten-Tipps',
-            },
-            codeExamples: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING },
-              description:
-                'Relevante Code-Patterns oder Beispiele für das Thema',
-            },
-          },
-          required: ['topic', 'keyPoints', 'uniqueInsights', 'codeExamples'],
-        },
+        responseSchema: buildSourceAnalysisSchema(),
       },
     });
 
