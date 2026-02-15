@@ -98,20 +98,21 @@ const { articleId } = Astro.props;
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: var(--color-surface, #141416);
-    border: 1px solid var(--color-border, #2a2a2e);
-    border-radius: var(--radius-md, 8px);
-    color: var(--color-text-muted, #b8b5b0);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
     cursor: pointer;
     transition:
       color 0.2s ease,
-      background 0.2s ease;
+      background 0.2s ease,
+      border-color 0.2s ease;
   }
 
   .delete-icon:hover {
-    color: var(--color-error, #f87171);
-    background: var(--color-error-muted, rgba(248, 113, 113, 0.12));
-    border-color: var(--color-error, #f87171);
+    color: var(--color-error);
+    background: var(--color-error-muted);
+    border-color: var(--color-error);
   }
 
   .delete-icon:disabled {

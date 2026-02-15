@@ -50,54 +50,9 @@ const imprintHtml = await renderMarkdown(imprintMarkdown);
     max-width: var(--content-max);
   }
 
-  .prose :global(h2) {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    color: var(--color-text);
-    margin-top: var(--space-8);
-    margin-bottom: var(--space-4);
-  }
-
-  .prose :global(h2:first-child) {
-    margin-top: 0;
-  }
-
-  .prose :global(p) {
-    font-family: var(--font-body);
-    font-size: var(--text-lg);
-    line-height: var(--leading-relaxed);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-4);
-  }
-
-  .prose :global(a) {
-    color: var(--color-primary-on-dark);
-    text-decoration: underline;
-    font-weight: 500;
-    transition: color var(--transition-fast);
-  }
-
-  .prose :global(a:hover) {
-    color: var(--color-primary-hover);
-  }
-
-  .prose :global(strong) {
-    color: var(--color-text);
-    font-weight: 600;
-  }
-
   @media (max-width: 768px) {
     .page-header h1 {
       font-size: var(--text-4xl);
-    }
-
-    .prose h2 {
-      font-size: var(--text-xl);
-    }
-
-    .prose p {
-      font-size: var(--text-base);
     }
   }
 </style>
