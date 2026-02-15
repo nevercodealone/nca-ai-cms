@@ -5,6 +5,7 @@ import { ContentGenerator } from '../../../services/ContentGenerator';
 import { ImageGenerator } from '../../../services/ImageGenerator';
 import { PromptService } from '../../../services/PromptService';
 import { getEnvVariable } from '../../../utils/envUtils';
+import { jsonResponse, jsonError } from '../_utils';
 
 function getService(): SchedulerService {
   return new SchedulerService(new AstroSchedulerDBAdapter());
@@ -15,21 +16,16 @@ export const POST: APIRoute = async ({ request }) => {
     const { id, mode = 'all' } = await request.json();
 
     if (!id) {
-      return new Response(JSON.stringify({ error: 'id is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('id is required', 400);
     }
 
     const service = getService();
     const post = await service.getById(id);
 
     if (!post.canGenerate()) {
-      return new Response(
-        JSON.stringify({
-          error: `Cannot generate: post is in status "${post.status}"`,
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      return jsonError(
+        `Cannot generate: post is in status "${post.status}"`,
+        400
       );
     }
 
@@ -90,17 +86,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const updated = await service.getById(id);
 
-    return new Response(JSON.stringify({ post: updated }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ post: updated });
   } catch (error) {
     console.error('Scheduler generate error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Generation failed',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError(error);
   }
 };

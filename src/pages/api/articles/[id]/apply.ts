@@ -1,12 +1,13 @@
 import type { APIRoute } from 'astro';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import sharp from 'sharp';
 import matter from 'gray-matter';
 import {
   ArticleService,
   ArticleNotFoundError,
 } from '../../../../services/ArticleService';
+import { convertToWebP } from '../../../../services/ImageConverter';
+import { jsonResponse, jsonError } from '../../_utils';
 
 interface ApplyRequest {
   // For text updates
@@ -25,10 +26,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     const slug = params.id;
 
     if (!slug) {
-      return new Response(JSON.stringify({ error: 'Article ID required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('Article ID required', 400);
     }
 
     const data: ApplyRequest = await request.json();
@@ -49,18 +47,8 @@ export const POST: APIRoute = async ({ params, request }) => {
 
       // Decode base64 image data and convert to WebP
       const base64Data = data.imageUrl.replace(/^data:image\/\w+;base64,/, '');
-      const imageBuffer = Buffer.from(base64Data, 'base64');
 
-      console.log('Image buffer size:', imageBuffer.length);
-
-      // Convert to WebP using sharp
-      const webpBuffer = await sharp(imageBuffer)
-        .webp({ quality: 85 })
-        .toBuffer();
-
-      console.log('WebP buffer size:', webpBuffer.length);
-
-      await fs.writeFile(heroPath, webpBuffer);
+      await convertToWebP(base64Data, heroPath);
       console.log('Image saved successfully');
 
       // Update imageAlt if provided
@@ -85,33 +73,16 @@ export const POST: APIRoute = async ({ params, request }) => {
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        articleId: existingArticle.articleId,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      success: true,
+      articleId: existingArticle.articleId,
+    });
   } catch (error) {
     if (error instanceof ArticleNotFoundError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError(error, 404);
     }
 
     console.error('Apply changes error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Apply failed',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };
