@@ -3,9 +3,9 @@ import { SchedulerService } from '../../../services/SchedulerService';
 import { AstroSchedulerDBAdapter } from '../../../services/SchedulerDBAdapter';
 import { Article } from '../../../domain/entities/Article';
 import { FileWriter } from '../../../services/FileWriter';
-import * as fs from 'fs/promises';
 import * as path from 'path';
-import sharp from 'sharp';
+import { convertToWebP } from '../../../services/ImageConverter';
+import { jsonResponse, jsonError } from '../_utils';
 
 function getService(): SchedulerService {
   return new SchedulerService(new AstroSchedulerDBAdapter());
@@ -44,12 +44,7 @@ async function publishPost(
   // Write image if available
   if (post.generatedImageData) {
     const imagePath = path.join(process.cwd(), article.folderPath, 'hero.webp');
-    const imageBuffer = Buffer.from(post.generatedImageData, 'base64');
-    const webpBuffer = await sharp(imageBuffer)
-      .webp({ quality: 85, effort: 6 })
-      .toBuffer();
-    await fs.mkdir(path.dirname(imagePath), { recursive: true });
-    await fs.writeFile(imagePath, webpBuffer);
+    await convertToWebP(post.generatedImageData, imagePath);
   }
 
   // Mark as published in DB
@@ -77,33 +72,19 @@ export const POST: APIRoute = async ({ request }) => {
         }
       }
 
-      return new Response(JSON.stringify({ published: results }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ published: results });
     }
 
     // Publish single post
     if (!data.id) {
-      return new Response(
-        JSON.stringify({ error: 'id or mode:"auto" is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonError('id or mode:"auto" is required', 400);
     }
 
     const result = await publishPost(service, data.id);
 
-    return new Response(JSON.stringify({ success: true, ...result }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ success: true, ...result });
   } catch (error) {
     console.error('Scheduler publish error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Publish failed',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError(error);
   }
 };

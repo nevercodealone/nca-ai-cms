@@ -55,14 +55,15 @@ const isAuthenticated = !!authCookie?.value;
 
         /* Text - Warm off-whites */
         --color-text: #faf9f7;
-        --color-text-secondary: #b8b5b0;
-        --color-text-muted: #9a9590;
+        --color-text-secondary: #d0cdc8;
+        --color-text-muted: #b8b5b0;
         --color-text-accent: #e8e6e1;
 
         /* Primary - Bold coral red */
         --color-primary: #e63946;
         --color-primary-hover: #d62839;
         --color-primary-dark: #b82d38;
+        --color-primary-on-dark: #f25d68;
         --color-primary-muted: rgba(230, 57, 70, 0.12);
         --color-primary-glow: rgba(230, 57, 70, 0.35);
 
@@ -288,6 +289,42 @@ const isAuthenticated = !!authCookie?.value;
 
       ::-webkit-scrollbar-thumb:hover {
         background: var(--color-text-muted);
+      }
+
+      /* Skip Link */
+      .skip-link {
+        position: absolute;
+        top: -100%;
+        left: var(--gutter);
+        z-index: 10000;
+        padding: var(--space-3) var(--space-6);
+        background: var(--color-primary);
+        color: #fff;
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        transition: top var(--transition-fast);
+      }
+
+      .skip-link:focus {
+        top: 0;
+        outline: 2px solid var(--color-text);
+        outline-offset: 2px;
+      }
+
+      /* Screen reader only */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
       }
 
       /* Container */
@@ -522,7 +559,7 @@ const isAuthenticated = !!authCookie?.value;
 
       .logo-tagline {
         font-family: var(--font-ui);
-        font-size: var(--text-xs);
+        font-size: var(--text-sm);
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: var(--tracking-widest);
@@ -632,7 +669,7 @@ const isAuthenticated = !!authCookie?.value;
         }
 
         .nav-link {
-          font-size: var(--text-xs);
+          font-size: var(--text-sm);
         }
       }
 
@@ -690,7 +727,7 @@ const isAuthenticated = !!authCookie?.value;
       }
 
       .footer-tagline {
-        font-size: var(--text-xs);
+        font-size: var(--text-sm);
         color: var(--color-text-muted);
         text-transform: uppercase;
         letter-spacing: var(--tracking-wider);
@@ -714,12 +751,12 @@ const isAuthenticated = !!authCookie?.value;
       }
 
       .footer-legal {
-        font-size: var(--text-xs);
+        font-size: var(--text-sm);
         color: var(--color-text-muted);
       }
 
       .footer-legal a {
-        color: var(--color-primary);
+        color: var(--color-primary-on-dark);
         text-decoration: none;
       }
 
@@ -733,9 +770,416 @@ const isAuthenticated = !!authCookie?.value;
           gap: var(--space-4);
         }
       }
+
+      /* ═══════════════════════════════════════════════════════════════════════════
+         SHARED UTILITY CLASSES
+         ═══════════════════════════════════════════════════════════════════════════ */
+
+      /* Spin animation - used by HeroImage, articles, preview */
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Kicker / Badge - uppercase label pill */
+      .kicker {
+        display: inline-block;
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-widest);
+        color: var(--color-primary-on-dark);
+        padding: var(--space-2) var(--space-4);
+        background: var(--color-primary-muted);
+        border-radius: var(--radius-full);
+      }
+
+      /* Tag - small pill label */
+      .tag {
+        font-family: var(--font-ui);
+        font-size: var(--text-base);
+        color: var(--color-text);
+        background: var(--color-surface-elevated);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
+      }
+
+      /* Back link with arrow icon */
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        transition: color var(--transition-fast);
+      }
+
+      .back-link:hover {
+        color: var(--color-primary);
+      }
+
+      .back-link svg {
+        transition: transform var(--transition-fast);
+      }
+
+      .back-link:hover svg {
+        transform: translateX(-4px);
+      }
+
+      /* Icon button - 36x36 action buttons */
+      .icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        color: var(--color-text-muted);
+        cursor: pointer;
+        transition:
+          color 0.2s ease,
+          background 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .icon-btn:hover {
+        color: var(--color-primary);
+        background: var(--color-surface-elevated);
+        border-color: var(--color-primary);
+      }
+
+      .icon-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .icon-btn.loading svg {
+        animation: spin 1s linear infinite;
+      }
+
+      /* Primary button */
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        padding: var(--space-4) var(--space-6);
+        background: var(--color-primary);
+        color: white;
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-wider);
+        text-decoration: none;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition:
+          background var(--transition-fast),
+          transform var(--transition-fast);
+      }
+
+      .btn-primary:hover {
+        background: var(--color-primary-hover);
+        transform: translateY(-2px);
+      }
+
+      /* Card base */
+      .card {
+        background: var(--color-surface);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        border: 1px solid var(--color-border-subtle);
+      }
+
+      /* Sidebar card with title */
+      .sidebar-card {
+        background: var(--color-surface);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        border: 1px solid var(--color-border-subtle);
+      }
+
+      .sidebar-card .sidebar-title {
+        font-family: var(--font-ui);
+        font-size: var(--text-base);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-widest);
+        color: var(--color-text);
+        margin-bottom: var(--space-4);
+      }
+
+      .sidebar-card .sidebar-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+      }
+
+      /* Prose - Magazine Typography for article content */
+      .prose {
+        font-family: var(--font-body);
+        font-size: var(--text-lg);
+        line-height: var(--leading-loose);
+        color: var(--color-text-accent);
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      }
+
+      .prose > p:first-of-type::first-letter {
+        font-family: var(--font-display);
+        font-size: 4.5em;
+        font-weight: 700;
+        float: left;
+        line-height: 0.75;
+        padding-right: var(--space-4);
+        padding-top: var(--space-2);
+        color: var(--color-primary);
+      }
+
+      .prose h1 {
+        font-family: var(--font-display);
+        font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl));
+        font-weight: 700;
+        line-height: var(--leading-tight);
+        letter-spacing: var(--tracking-tighter);
+        margin-bottom: var(--space-8);
+        color: var(--color-text);
+      }
+
+      .prose h2 {
+        font-family: var(--font-display);
+        font-size: var(--text-3xl);
+        font-weight: 600;
+        line-height: var(--leading-snug);
+        letter-spacing: var(--tracking-tight);
+        margin-top: var(--space-14);
+        margin-bottom: var(--space-6);
+        color: var(--color-text);
+      }
+
+      .prose h3 {
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        font-weight: 600;
+        line-height: var(--leading-snug);
+        margin-top: var(--space-10);
+        margin-bottom: var(--space-4);
+        color: var(--color-text);
+      }
+
+      .prose h4 {
+        font-family: var(--font-display);
+        font-size: var(--text-xl);
+        font-weight: 600;
+        margin-top: var(--space-8);
+        margin-bottom: var(--space-3);
+        color: var(--color-text);
+      }
+
+      .prose p {
+        margin-bottom: var(--space-6);
+      }
+
+      .prose strong {
+        font-weight: 600;
+        color: var(--color-text);
+      }
+
+      .prose em {
+        font-style: italic;
+      }
+
+      .prose a {
+        color: var(--color-primary);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+        transition:
+          color var(--transition-fast),
+          text-decoration-color var(--transition-fast);
+      }
+
+      .prose a:hover {
+        color: var(--color-accent);
+      }
+
+      .prose ul,
+      .prose ol {
+        margin-bottom: var(--space-6);
+        padding-left: var(--space-6);
+      }
+
+      .prose li {
+        margin-bottom: var(--space-3);
+        padding-left: var(--space-2);
+      }
+
+      .prose li::marker {
+        color: var(--color-primary);
+      }
+
+      .prose ol li::marker {
+        font-weight: 600;
+      }
+
+      .prose code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+      }
+
+      .prose p code,
+      .prose li code {
+        background: var(--color-surface-elevated);
+        padding: var(--space-1) var(--space-2);
+        border-radius: var(--radius-sm);
+        color: var(--color-accent);
+      }
+
+      .prose pre {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: var(--space-6);
+        margin: var(--space-8) 0;
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      .prose pre code {
+        background: transparent;
+        padding: 0;
+        color: var(--color-text-accent);
+        font-size: var(--text-sm);
+        line-height: var(--leading-relaxed);
+        white-space: pre;
+        display: block;
+      }
+
+      .prose blockquote {
+        position: relative;
+        margin: var(--space-10) 0;
+        padding: var(--space-6) var(--space-8);
+        background: var(--color-surface);
+        border-left: 4px solid var(--color-primary);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      }
+
+      .prose blockquote p {
+        font-style: italic;
+        font-size: var(--text-xl);
+        color: var(--color-text-secondary);
+        margin-bottom: 0;
+      }
+
+      .prose blockquote p:last-child {
+        margin-bottom: 0;
+      }
+
+      .prose hr {
+        border: none;
+        height: 1px;
+        background: var(--color-border);
+        margin: var(--space-12) 0;
+      }
+
+      .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: var(--space-8) 0;
+        font-size: var(--text-base);
+      }
+
+      .prose th,
+      .prose td {
+        padding: var(--space-4);
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .prose th {
+        font-family: var(--font-ui);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: var(--text-sm);
+        letter-spacing: var(--tracking-wider);
+        color: var(--color-text-muted);
+        background: var(--color-surface);
+      }
+
+      .prose img {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--radius-md);
+        margin: var(--space-8) 0;
+      }
+
+      /* Prose responsive */
+      @media (max-width: 768px) {
+        .prose {
+          font-size: var(--text-base);
+        }
+
+        .prose > p:first-of-type::first-letter {
+          font-size: 3.5em;
+        }
+
+        .prose h1 {
+          font-size: var(--text-3xl);
+        }
+
+        .prose h2 {
+          font-size: var(--text-2xl);
+        }
+
+        .prose h3 {
+          font-size: var(--text-xl);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .prose > p:first-of-type::first-letter {
+          font-size: 3em;
+          padding-right: var(--space-2);
+        }
+
+        .prose h1 {
+          font-size: var(--text-2xl);
+        }
+
+        .prose h2 {
+          font-size: var(--text-xl);
+          margin-top: var(--space-10);
+        }
+
+        .prose h3 {
+          font-size: var(--text-lg);
+        }
+
+        .prose blockquote {
+          padding: var(--space-4) var(--space-5);
+        }
+
+        .prose blockquote p {
+          font-size: var(--text-lg);
+        }
+      }
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="logo">
@@ -781,7 +1225,7 @@ const isAuthenticated = !!authCookie?.value;
         </nav>
       </div>
     </header>
-    <main class="site-main">
+    <main class="site-main" id="main-content">
       <slot />
     </main>
     <footer class="site-footer">
@@ -798,7 +1242,10 @@ const isAuthenticated = !!authCookie?.value;
           POC Projekt von <a
             href="https://nevercodealone.de"
             target="_blank"
-            rel="noopener">Never Code Alone</a
+            rel="noopener"
+            >Never Code Alone<span class="sr-only">
+              (öffnet in neuem Tab)</span
+            ></a
           >
         </div>
       </div>

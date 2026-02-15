@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { PromptService } from '../../services/PromptService';
+import { jsonResponse, jsonError } from './_utils';
 
 const service = new PromptService();
 
@@ -11,27 +12,13 @@ export const GET: APIRoute = async () => {
       service.getAllSettings(),
     ]);
 
-    return new Response(
-      JSON.stringify({
-        prompts,
-        settings,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      prompts,
+      settings,
+    });
   } catch (error) {
     console.error('Get prompts error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to get prompts',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };
 
@@ -42,45 +29,17 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (data.type === 'prompt' && data.id && data.promptText !== undefined) {
       await service.updatePrompt(data.id, data.promptText);
-      return new Response(
-        JSON.stringify({ success: true, type: 'prompt', id: data.id }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return jsonResponse({ success: true, type: 'prompt', id: data.id });
     }
 
     if (data.type === 'setting' && data.key && data.value !== undefined) {
       await service.updateSetting(data.key, data.value);
-      return new Response(
-        JSON.stringify({ success: true, type: 'setting', key: data.key }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return jsonResponse({ success: true, type: 'setting', key: data.key });
     }
 
-    return new Response(
-      JSON.stringify({
-        error: 'Invalid request: missing type, id/key, or value',
-      }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError('Invalid request: missing type, id/key, or value', 400);
   } catch (error) {
     console.error('Update prompt error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to update',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };

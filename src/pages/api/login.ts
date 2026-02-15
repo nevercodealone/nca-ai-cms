@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getEnvVariable } from '../../utils/envUtils';
+import { jsonResponse, jsonError } from './_utils';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -9,10 +10,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const validPass = getEnvVariable('EDITOR_PASSWORD');
 
     if (username !== validUser || password !== validPass) {
-      return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('Invalid credentials', 401);
     }
 
     // Create auth token
@@ -27,20 +25,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       maxAge: 60 * 60 * 24, // 24 hours
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ success: true });
   } catch (error) {
     console.error('Login error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Invalid request',
-      }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error, 400);
   }
 };

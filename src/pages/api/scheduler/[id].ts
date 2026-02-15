@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { SchedulerService } from '../../../services/SchedulerService';
 import { AstroSchedulerDBAdapter } from '../../../services/SchedulerDBAdapter';
+import { jsonResponse, jsonError } from '../_utils';
 
 function getService(): SchedulerService {
   return new SchedulerService(new AstroSchedulerDBAdapter());
@@ -10,19 +11,13 @@ export const DELETE: APIRoute = async ({ params }) => {
   try {
     const id = params.id;
     if (!id) {
-      return new Response(JSON.stringify({ error: 'id is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('id is required', 400);
     }
 
     const service = getService();
     await service.delete(id);
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ success: true });
   } catch (error) {
     console.error('Scheduler delete error:', error);
     const status =
@@ -31,11 +26,6 @@ export const DELETE: APIRoute = async ({ params }) => {
         : error instanceof Error && error.message.includes('Cannot delete')
           ? 403
           : 500;
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to delete post',
-      }),
-      { status, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError(error, status);
   }
 };

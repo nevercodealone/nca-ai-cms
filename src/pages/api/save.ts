@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { Article } from '../../domain/entities/Article';
 import { FileWriter } from '../../services/FileWriter';
+import { jsonResponse, jsonError } from './_utils';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -19,27 +20,13 @@ export const POST: APIRoute = async ({ request }) => {
     const writer = new FileWriter();
     const result = await writer.write(article);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        filepath: result.filepath,
-        folderPath: article.folderPath,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      success: true,
+      filepath: result.filepath,
+      folderPath: article.folderPath,
+    });
   } catch (error) {
     console.error('Save error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Save failed',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };

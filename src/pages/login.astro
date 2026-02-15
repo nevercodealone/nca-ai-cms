@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import BackLink from '../components/BackLink.astro';
 
 // Redirect if already logged in
 const authCookie = Astro.cookies.get('editor-auth');
@@ -53,7 +54,8 @@ if (authCookie?.value) {
               placeholder="Dein Passwort"
             />
           </div>
-          <div id="error" class="error"></div>
+          <div id="error" class="error" role="alert" aria-live="assertive">
+          </div>
           <button type="submit" class="submit-button glow-primary">
             <span class="button-text">Anmelden</span>
             <svg
@@ -74,22 +76,7 @@ if (authCookie?.value) {
         </form>
 
         <footer class="login-footer">
-          <a href="/" class="back-link">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Zurück zur Startseite
-          </a>
+          <BackLink href="/" text="Zurück zur Startseite" />
         </footer>
       </div>
     </div>
@@ -173,7 +160,7 @@ if (authCookie?.value) {
 
   .logo-text {
     font-family: var(--font-ui);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-widest);
@@ -209,7 +196,7 @@ if (authCookie?.value) {
 
   label {
     font-family: var(--font-ui);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-widest);
@@ -261,13 +248,13 @@ if (authCookie?.value) {
     gap: var(--space-3);
     width: 100%;
     padding: var(--space-4) var(--space-6);
-    background: var(--color-primary);
+    background: var(--color-primary-dark);
     border: none;
     border-radius: var(--radius-md);
     color: white;
     font-family: var(--font-ui);
     font-size: var(--text-base);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--tracking-wider);
     cursor: pointer;
@@ -307,29 +294,6 @@ if (authCookie?.value) {
     padding-top: var(--space-6);
     border-top: 1px solid var(--color-border);
     text-align: center;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--color-text-muted);
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
-
-  .back-link:hover {
-    color: var(--color-primary);
-  }
-
-  .back-link svg {
-    transition: transform var(--transition-fast);
-  }
-
-  .back-link:hover svg {
-    transform: translateX(-4px);
   }
 
   @media (max-width: 480px) {

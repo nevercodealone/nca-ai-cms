@@ -5,6 +5,7 @@ import {
 } from '../../../../services/ArticleService';
 import { ImageGenerator } from '../../../../services/ImageGenerator';
 import { getEnvVariable } from '../../../../utils/envUtils';
+import { jsonResponse, jsonError } from '../../_utils';
 
 // POST /api/articles/[id]/regenerate-image - Generate new image for article
 // Returns preview of new image URL WITHOUT saving
@@ -13,10 +14,7 @@ export const POST: APIRoute = async ({ params }) => {
     const slug = params.id;
 
     if (!slug) {
-      return new Response(JSON.stringify({ error: 'Article ID required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('Article ID required', 400);
     }
 
     // Read existing article to get title for image generation
@@ -32,37 +30,19 @@ export const POST: APIRoute = async ({ params }) => {
     const generator = new ImageGenerator({ apiKey });
     const image = await generator.generate(existingArticle.title);
 
-    return new Response(
-      JSON.stringify({
-        url: image.url,
-        alt: image.alt,
-        // Include article info for reference
-        articleId: existingArticle.articleId,
-        articleTitle: existingArticle.title,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      url: image.url,
+      alt: image.alt,
+      // Include article info for reference
+      articleId: existingArticle.articleId,
+      articleTitle: existingArticle.title,
+    });
   } catch (error) {
     if (error instanceof ArticleNotFoundError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError(error, 404);
     }
 
     console.error('Regenerate image error:', error);
-    return new Response(
-      JSON.stringify({
-        error:
-          error instanceof Error ? error.message : 'Image regeneration failed',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };

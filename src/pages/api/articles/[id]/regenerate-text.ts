@@ -6,6 +6,7 @@ import {
 import { ContentGenerator } from '../../../../services/ContentGenerator';
 import { PromptService } from '../../../../services/PromptService';
 import { getEnvVariable } from '../../../../utils/envUtils';
+import { jsonResponse, jsonError } from '../../_utils';
 
 // POST /api/articles/[id]/regenerate-text - Generate new content for article
 // Returns preview of new content WITHOUT saving
@@ -14,10 +15,7 @@ export const POST: APIRoute = async ({ params }) => {
     const slug = params.id;
 
     if (!slug) {
-      return new Response(JSON.stringify({ error: 'Article ID required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('Article ID required', 400);
     }
 
     // Read existing article to get title for regeneration
@@ -38,38 +36,21 @@ export const POST: APIRoute = async ({ params }) => {
       existingArticle.title
     );
 
-    return new Response(
-      JSON.stringify({
-        title: newArticle.title,
-        description: newArticle.description,
-        content: newArticle.content,
-        tags: newArticle.tags,
-        // Include original article info for reference
-        originalTitle: existingArticle.title,
-        articleId: existingArticle.articleId,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      title: newArticle.title,
+      description: newArticle.description,
+      content: newArticle.content,
+      tags: newArticle.tags,
+      // Include original article info for reference
+      originalTitle: existingArticle.title,
+      articleId: existingArticle.articleId,
+    });
   } catch (error) {
     if (error instanceof ArticleNotFoundError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError(error, 404);
     }
 
     console.error('Regenerate text error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Regeneration failed',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };

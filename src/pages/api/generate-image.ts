@@ -1,44 +1,27 @@
 import type { APIRoute } from 'astro';
 import { ImageGenerator } from '../../services/ImageGenerator';
 import { getEnvVariable } from '../../utils/envUtils';
+import { jsonResponse, jsonError } from './_utils';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { title } = await request.json();
 
     if (!title) {
-      return new Response(JSON.stringify({ error: 'Title is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonError('Title is required', 400);
     }
 
     const apiKey = getEnvVariable('GOOGLE_GEMINI_API_KEY');
     const generator = new ImageGenerator({ apiKey });
     const image = await generator.generate(title);
 
-    return new Response(
-      JSON.stringify({
-        url: image.url,
-        alt: image.alt,
-        filepath: image.filepath,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonResponse({
+      url: image.url,
+      alt: image.alt,
+      filepath: image.filepath,
+    });
   } catch (error) {
     console.error('Image generation error:', error);
-    return new Response(
-      JSON.stringify({
-        error:
-          error instanceof Error ? error.message : 'Image generation failed',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return jsonError(error);
   }
 };

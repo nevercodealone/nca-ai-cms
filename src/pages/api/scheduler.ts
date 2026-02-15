@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { SchedulerService } from '../../services/SchedulerService';
 import { AstroSchedulerDBAdapter } from '../../services/SchedulerDBAdapter';
+import { jsonResponse, jsonError } from './_utils';
 
 function getService(): SchedulerService {
   return new SchedulerService(new AstroSchedulerDBAdapter());
@@ -10,18 +11,10 @@ export const GET: APIRoute = async () => {
   try {
     const service = getService();
     const posts = await service.list();
-    return new Response(JSON.stringify({ posts }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ posts });
   } catch (error) {
     console.error('Scheduler list error:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to list posts',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError(error);
   }
 };
 
@@ -30,10 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
     const data = await request.json();
 
     if (!data.input || !data.scheduledDate) {
-      return new Response(
-        JSON.stringify({ error: 'input and scheduledDate are required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonError('input and scheduledDate are required', 400);
     }
 
     const service = getService();
@@ -42,21 +32,13 @@ export const POST: APIRoute = async ({ request }) => {
       scheduledDate: new Date(data.scheduledDate),
     });
 
-    return new Response(JSON.stringify({ post }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ post }, 201);
   } catch (error) {
     console.error('Scheduler create error:', error);
     const status =
       error instanceof Error && error.message.includes('already scheduled')
         ? 409
         : 500;
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to create post',
-      }),
-      { status, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError(error, status);
   }
 };
