@@ -62,17 +62,20 @@ export const POST: APIRoute = async ({ request }) => {
     if (data.mode === 'auto') {
       const duePosts = await service.getDuePosts();
       const results: { id: string; publishedPath: string }[] = [];
+      const failed: { id: string; error: string }[] = [];
 
       for (const post of duePosts) {
         try {
           const result = await publishPost(service, post.id);
           results.push(result);
         } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
           console.error(`Failed to auto-publish ${post.id}:`, error);
+          failed.push({ id: post.id, error: message });
         }
       }
 
-      return jsonResponse({ published: results });
+      return jsonResponse({ published: results, failed });
     }
 
     // Publish single post

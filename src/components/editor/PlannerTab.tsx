@@ -23,12 +23,22 @@ export default function PlannerTab() {
     try {
       // Auto-publish due posts on load
       setAutoPublishing(true);
-      await fetch('/api/scheduler/publish', {
+      const autoResponse = await fetch('/api/scheduler/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'auto' }),
       });
       setAutoPublishing(false);
+
+      if (!autoResponse.ok) {
+        setPlannerError('Auto-Veröffentlichung fehlgeschlagen');
+      } else {
+        const autoData = await autoResponse.json();
+        if (autoData.failed && autoData.failed.length > 0) {
+          const failedIds = autoData.failed.map((f: { id: string }) => f.id).join(', ');
+          setPlannerError(`Auto-Veröffentlichung fehlgeschlagen für: ${failedIds}`);
+        }
+      }
 
       const response = await fetch('/api/scheduler');
       if (!response.ok) throw new Error('Failed to load planner');
