@@ -168,4 +168,61 @@ describe('ScheduledPost', () => {
     const post = ScheduledPost.create(defaultProps);
     expect(post.parsedTags).toEqual([]);
   });
+
+  describe('isDue() timezone safety', () => {
+    it('is due when scheduled for today (UTC)', () => {
+      const today = new Date();
+      const post = ScheduledPost.fromDB({
+        ...defaultProps,
+        id: 'sp_tz1',
+        scheduledDate: today,
+        status: 'generated',
+        createdAt: new Date(),
+      });
+      expect(post.isDue()).toBe(true);
+    });
+
+    it('is due when scheduled date is an ISO string parsed as UTC', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isoDate = yesterday.toISOString().slice(0, 10);
+
+      const post = ScheduledPost.fromDB({
+        ...defaultProps,
+        id: 'sp_tz2',
+        scheduledDate: new Date(isoDate),
+        status: 'generated',
+        createdAt: new Date(),
+      });
+      expect(post.isDue()).toBe(true);
+    });
+
+    it('is not due when scheduled for tomorrow', () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const post = ScheduledPost.fromDB({
+        ...defaultProps,
+        id: 'sp_tz3',
+        scheduledDate: tomorrow,
+        status: 'generated',
+        createdAt: new Date(),
+      });
+      expect(post.isDue()).toBe(false);
+    });
+
+    it('is not due when status is published', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const post = ScheduledPost.fromDB({
+        ...defaultProps,
+        id: 'sp_tz4',
+        scheduledDate: yesterday,
+        status: 'published',
+        createdAt: new Date(),
+      });
+      expect(post.isDue()).toBe(false);
+    });
+  });
 });

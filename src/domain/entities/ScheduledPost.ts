@@ -128,11 +128,9 @@ export class ScheduledPost {
 
   isDue(): boolean {
     if (this.status !== 'generated') return false;
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const scheduled = new Date(this.scheduledDate);
-    scheduled.setHours(0, 0, 0, 0);
-    return scheduled <= now;
+    const nowDate = new Date().toISOString().slice(0, 10);
+    const scheduledDate = new Date(this.scheduledDate).toISOString().slice(0, 10);
+    return scheduledDate <= nowDate;
   }
 
   get scheduledYear(): number {
