@@ -3,6 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import { renderMarkdown } from '../../utils/markdown';
 import { escapeJsonLd } from '../../utils/sanitize';
 import HeroImage from '../../components/HeroImage.astro';
+import ArticleHeader from '../../components/ArticleHeader.astro';
+import SidebarCard from '../../components/SidebarCard.astro';
+import BackLink from '../../components/BackLink.astro';
 import { ArticleService } from '../../services/ArticleService';
 
 // Check if user is authenticated
@@ -66,27 +69,16 @@ const jsonLd = {
   />
   <article class="article-page">
     <!-- Article Header -->
-    <header class="article-header" data-article-id={articleSlug}>
-      <div class="article-header-content animate-fadeInUp">
-        <div class="article-meta">
-          <span class="article-category">{article.tags[0]}</span>
-          <span class="article-meta-divider" aria-hidden="true"></span>
-          <time datetime={article.date.toISOString()} class="article-date">
-            {formattedDate}
-          </time>
-        </div>
-        <p class="article-lede">{article.description}</p>
-        {
-          article.tags.length > 1 && (
-            <div class="article-tags">
-              {article.tags.slice(1).map((tag: string) => (
-                <span class="article-tag">{tag}</span>
-              ))}
-            </div>
-          )
-        }
-      </div>
-    </header>
+    <div data-article-id={articleSlug}>
+      <ArticleHeader
+        category={article.tags[0]}
+        date={formattedDate}
+        datetime={article.date.toISOString()}
+        lede={article.description}
+        tags={article.tags}
+        animate={true}
+      />
+    </div>
 
     <!-- Hero Image -->
     {
@@ -106,7 +98,7 @@ const jsonLd = {
           isAuthenticated && (
             <div class="content-actions">
               <button
-                class="regenerate-text-icon"
+                class="icon-btn regenerate-text-icon"
                 type="button"
                 aria-label="Text neu generieren"
               >
@@ -149,37 +141,17 @@ const jsonLd = {
 
       <!-- Sidebar -->
       <aside class="article-sidebar">
-        <div class="sidebar-card">
-          <h4 class="sidebar-title">Themen</h4>
+        <SidebarCard title="Themen">
           <div class="sidebar-tags">
-            {
-              article.tags.map((tag: string) => (
-                <span class="sidebar-tag">{tag}</span>
-              ))
-            }
+            {article.tags.map((tag: string) => <span class="tag">{tag}</span>)}
           </div>
-        </div>
+        </SidebarCard>
       </aside>
     </div>
 
     <!-- Article Footer -->
     <footer class="article-footer">
-      <a href="/" class="back-link">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        <span>Zurück zur Übersicht</span>
-      </a>
+      <BackLink href="/" text="Zurück zur Übersicht" />
     </footer>
   </article>
 </Layout>
@@ -293,74 +265,6 @@ const jsonLd = {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     ARTICLE HEADER
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .article-header {
-    padding: var(--space-16) 0 var(--space-12);
-    max-width: 900px;
-  }
-
-  .article-header-content {
-    opacity: 0;
-  }
-
-  .article-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-  }
-
-  .article-category {
-    font-family: var(--font-ui);
-    font-size: var(--text-base);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-widest);
-    color: var(--color-text);
-    padding: var(--space-1) var(--space-3);
-    background: var(--color-primary-muted);
-    border-radius: var(--radius-sm);
-  }
-
-  .article-meta-divider {
-    width: 32px;
-    height: 1px;
-    background: var(--color-border-accent);
-  }
-
-  .article-date {
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    color: var(--color-text);
-  }
-
-  .article-lede {
-    font-family: var(--font-body);
-    font-size: var(--text-xl);
-    color: var(--color-text);
-    line-height: var(--leading-relaxed);
-    max-width: 720px;
-    margin-bottom: var(--space-6);
-  }
-
-  .article-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .article-tag {
-    font-family: var(--font-ui);
-    font-size: var(--text-base);
-    color: var(--color-text);
-    background: var(--color-surface-elevated);
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      ARTICLE BODY - Two Column Layout
      ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -377,221 +281,6 @@ const jsonLd = {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     PROSE STYLES - Magazine Typography
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .prose {
-    font-family: var(--font-body);
-    font-size: var(--text-lg);
-    line-height: var(--leading-loose);
-    color: var(--color-text-accent);
-    max-width: 100%;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-  }
-
-  /* Drop Cap - First letter of first paragraph */
-  .prose :global(> p:first-of-type::first-letter) {
-    font-family: var(--font-display);
-    font-size: 4.5em;
-    font-weight: 700;
-    float: left;
-    line-height: 0.75;
-    padding-right: var(--space-4);
-    padding-top: var(--space-2);
-    color: var(--color-primary);
-  }
-
-  /* Headings */
-  .prose :global(h1) {
-    font-family: var(--font-display);
-    font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl));
-    font-weight: 700;
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tighter);
-    margin-bottom: var(--space-8);
-    color: var(--color-text);
-  }
-
-  .prose :global(h2) {
-    font-family: var(--font-display);
-    font-size: var(--text-3xl);
-    font-weight: 600;
-    line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-tight);
-    margin-top: var(--space-14);
-    margin-bottom: var(--space-6);
-    color: var(--color-text);
-  }
-
-  .prose :global(h3) {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    line-height: var(--leading-snug);
-    margin-top: var(--space-10);
-    margin-bottom: var(--space-4);
-    color: var(--color-text);
-  }
-
-  .prose :global(h4) {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: 600;
-    margin-top: var(--space-8);
-    margin-bottom: var(--space-3);
-    color: var(--color-text);
-  }
-
-  /* Paragraphs */
-  .prose :global(p) {
-    margin-bottom: var(--space-6);
-  }
-
-  /* Strong/Bold */
-  .prose :global(strong) {
-    font-weight: 600;
-    color: var(--color-text);
-  }
-
-  /* Emphasis/Italic */
-  .prose :global(em) {
-    font-style: italic;
-  }
-
-  /* Links */
-  .prose :global(a) {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-thickness: 1px;
-    transition:
-      color var(--transition-fast),
-      text-decoration-color var(--transition-fast);
-  }
-
-  .prose :global(a:hover) {
-    color: var(--color-accent);
-  }
-
-  /* Lists */
-  .prose :global(ul),
-  .prose :global(ol) {
-    margin-bottom: var(--space-6);
-    padding-left: var(--space-6);
-  }
-
-  .prose :global(li) {
-    margin-bottom: var(--space-3);
-    padding-left: var(--space-2);
-  }
-
-  .prose :global(li::marker) {
-    color: var(--color-primary);
-  }
-
-  .prose :global(ol li::marker) {
-    font-weight: 600;
-  }
-
-  /* Code - Inline */
-  .prose :global(code) {
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-  }
-
-  .prose :global(p code),
-  .prose :global(li code) {
-    background: var(--color-surface-elevated);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    color: var(--color-accent);
-  }
-
-  /* Code - Block */
-  .prose :global(pre) {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-6);
-    margin: var(--space-8) 0;
-    overflow-x: auto;
-    max-width: 100%;
-  }
-
-  .prose :global(pre code) {
-    background: transparent;
-    padding: 0;
-    color: var(--color-text-accent);
-    font-size: var(--text-sm);
-    line-height: var(--leading-relaxed);
-    white-space: pre;
-    display: block;
-  }
-
-  /* Blockquotes */
-  .prose :global(blockquote) {
-    position: relative;
-    margin: var(--space-10) 0;
-    padding: var(--space-6) var(--space-8);
-    background: var(--color-surface);
-    border-left: 4px solid var(--color-primary);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  }
-
-  .prose :global(blockquote p) {
-    font-style: italic;
-    font-size: var(--text-xl);
-    color: var(--color-text-secondary);
-    margin-bottom: 0;
-  }
-
-  .prose :global(blockquote p:last-child) {
-    margin-bottom: 0;
-  }
-
-  /* Horizontal Rule */
-  .prose :global(hr) {
-    border: none;
-    height: 1px;
-    background: var(--color-border);
-    margin: var(--space-12) 0;
-  }
-
-  /* Tables */
-  .prose :global(table) {
-    width: 100%;
-    border-collapse: collapse;
-    margin: var(--space-8) 0;
-    font-size: var(--text-base);
-  }
-
-  .prose :global(th),
-  .prose :global(td) {
-    padding: var(--space-4);
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .prose :global(th) {
-    font-family: var(--font-ui);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: var(--text-sm);
-    letter-spacing: var(--tracking-wider);
-    color: var(--color-text-muted);
-    background: var(--color-surface);
-  }
-
-  /* Images in content */
-  .prose :global(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius-md);
-    margin: var(--space-8) 0;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      CONTENT ACTIONS (Text Regeneration)
      ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -600,46 +289,6 @@ const jsonLd = {
     align-items: center;
     gap: var(--space-2);
     margin-bottom: var(--space-4);
-  }
-
-  .regenerate-text-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition:
-      color 0.2s ease,
-      background 0.2s ease;
-  }
-
-  .regenerate-text-icon:hover {
-    color: var(--color-primary);
-    background: var(--color-surface-elevated);
-    border-color: var(--color-primary);
-  }
-
-  .regenerate-text-icon:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .regenerate-text-icon.loading svg {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .apply-text-btn {
@@ -682,38 +331,6 @@ const jsonLd = {
     gap: var(--space-6);
   }
 
-  .sidebar-card {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    border: 1px solid var(--color-border-subtle);
-  }
-
-  .sidebar-title {
-    font-family: var(--font-ui);
-    font-size: var(--text-base);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-widest);
-    color: var(--color-text);
-    margin-bottom: var(--space-4);
-  }
-
-  .sidebar-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .sidebar-tag {
-    font-family: var(--font-ui);
-    font-size: var(--text-base);
-    color: var(--color-text);
-    background: var(--color-surface-elevated);
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-  }
-
   /* ═══════════════════════════════════════════════════════════════════════════
      ARTICLE FOOTER
      ═══════════════════════════════════════════════════════════════════════════ */
@@ -723,30 +340,6 @@ const jsonLd = {
     margin-top: var(--space-16);
     padding: var(--space-8) 0 var(--space-20);
     border-top: 1px solid var(--color-border);
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    transition: color var(--transition-fast);
-  }
-
-  .back-link:hover {
-    color: var(--color-primary);
-  }
-
-  .back-link svg {
-    transition: transform var(--transition-fast);
-  }
-
-  .back-link:hover svg {
-    transform: translateX(-4px);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -773,34 +366,6 @@ const jsonLd = {
 
   /* Tablet */
   @media (max-width: 768px) {
-    .article-header {
-      padding: var(--space-10) 0 var(--space-8);
-    }
-
-    .article-lede {
-      font-size: var(--text-lg);
-    }
-
-    .prose {
-      font-size: var(--text-base);
-    }
-
-    .prose :global(> p:first-of-type::first-letter) {
-      font-size: 3.5em;
-    }
-
-    .prose :global(h1) {
-      font-size: var(--text-3xl);
-    }
-
-    .prose :global(h2) {
-      font-size: var(--text-2xl);
-    }
-
-    .prose :global(h3) {
-      font-size: var(--text-xl);
-    }
-
     .sidebar-card {
       min-width: 100%;
     }
@@ -808,48 +373,6 @@ const jsonLd = {
 
   /* Mobile */
   @media (max-width: 480px) {
-    .article-header {
-      padding: var(--space-8) 0 var(--space-6);
-    }
-
-    .article-meta {
-      gap: var(--space-2);
-    }
-
-    .article-meta-divider {
-      width: 16px;
-    }
-
-    .article-lede {
-      font-size: var(--text-base);
-    }
-
-    .prose :global(> p:first-of-type::first-letter) {
-      font-size: 3em;
-      padding-right: var(--space-2);
-    }
-
-    .prose :global(h1) {
-      font-size: var(--text-2xl);
-    }
-
-    .prose :global(h2) {
-      font-size: var(--text-xl);
-      margin-top: var(--space-10);
-    }
-
-    .prose :global(h3) {
-      font-size: var(--text-lg);
-    }
-
-    .prose :global(blockquote) {
-      padding: var(--space-4) var(--space-5);
-    }
-
-    .prose :global(blockquote p) {
-      font-size: var(--text-lg);
-    }
-
     .sidebar-card {
       padding: var(--space-4);
     }
