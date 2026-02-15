@@ -19,6 +19,15 @@ Object.assign(process.env, {
   GOOGLE_GEMINI_MODELS,
 });
 
+// Start auto-publisher in production (standalone Node server)
+if (process.env.NODE_ENV === 'production') {
+  import('./src/services/AutoPublisher.js').then(({ startAutoPublisher }) => {
+    startAutoPublisher();
+  }).catch((err) => {
+    console.error('[AutoPublisher] Failed to start:', err);
+  });
+}
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://semantik-html-barrierefrei.de',
