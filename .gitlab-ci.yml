@@ -21,8 +21,8 @@ build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    # Backup content from old container
-    - docker cp $SHORTCODE1-web:/app/nca-ai-cms-content /tmp/articles 2>/dev/null || true
+    # Backup content from old container (fallback to old path for migration)
+    - docker cp $SHORTCODE1-web:/app/nca-ai-cms-content /tmp/articles 2>/dev/null || docker cp $SHORTCODE1-web:/app/src/content/articles /tmp/articles 2>/dev/null || true
     - docker cp $SHORTCODE1-web:/app/.astro /tmp/astro-db 2>/dev/null || true
     # Remove old container and start new one
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
