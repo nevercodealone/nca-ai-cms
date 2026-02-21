@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # Auto-fix local plugin reference before commit
-# Replaces file: references with ^1.0.0 in package.json
+# Replaces file: references with pinned version in package.json
 if grep -q '"file:.*nca-ai-cms-astro-plugin"' package.json; then
   echo "Fixing local plugin reference in package.json..."
-  sed -i 's|"file:[^"]*nca-ai-cms-astro-plugin"|"^1.0.0"|g' package.json
+  sed -i 's|"file:[^"]*nca-ai-cms-astro-plugin"|"1.0.1"|g' package.json
   git add package.json
 fi
 
