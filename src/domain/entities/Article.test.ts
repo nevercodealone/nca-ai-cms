@@ -29,14 +29,14 @@ describe('Article', () => {
   it('generates correct folderPath for co-located content', () => {
     const article = new Article(defaultProps);
     expect(article.folderPath).toBe(
-      'src/content/articles/2025/12/html-accessibility-grundlagen'
+      'nca-ai-cms-content/2025/12/html-accessibility-grundlagen'
     );
   });
 
   it('generates correct filepath with index.md', () => {
     const article = new Article(defaultProps);
     expect(article.filepath).toBe(
-      'src/content/articles/2025/12/html-accessibility-grundlagen/index.md'
+      'nca-ai-cms-content/2025/12/html-accessibility-grundlagen/index.md'
     );
   });
 

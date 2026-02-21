@@ -14,7 +14,7 @@ describe('generateSitemapXml', () => {
     date: new Date('2026-01-15'),
     tags: ['test'],
     content: 'Test content',
-    folderPath: '/app/src/content/articles/2026/01/test-article',
+    folderPath: '/app/nca-ai-cms-content/2026/01/test-article',
     ...overrides,
   });
 

@@ -4,6 +4,7 @@ import { loadEnv } from 'vite';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
 import db from '@astrojs/db';
+import ncaAiCms from 'nca-ai-cms-astro-plugin';
 
 // Load .env files into process.env for SSR
 const {
@@ -19,19 +20,10 @@ Object.assign(process.env, {
   GOOGLE_GEMINI_MODELS,
 });
 
-// Start auto-publisher in production (standalone Node server)
-if (process.env.NODE_ENV === 'production') {
-  import('./src/services/AutoPublisher.js').then(({ startAutoPublisher }) => {
-    startAutoPublisher();
-  }).catch((err) => {
-    console.error('[AutoPublisher] Failed to start:', err);
-  });
-}
-
 // https://astro.build/config
 export default defineConfig({
   site: 'https://semantik-html-barrierefrei.de',
-  integrations: [react(), db()],
+  integrations: [react(), ncaAiCms(), db()],
   output: 'server',
   adapter: node({
     mode: 'standalone',
