@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Auto-fix local plugin reference before commit
+# Replaces file:../nca-ai-cms-astro-plugin with ^0.1.0 in package.json
+if grep -q '"file:../nca-ai-cms-astro-plugin"' package.json; then
+  echo "Fixing local plugin reference in package.json..."
+  sed -i 's|"file:../nca-ai-cms-astro-plugin"|"^0.1.0"|g' package.json
+  git add package.json
+fi
+
+npm run plugin:lint
+npm test
