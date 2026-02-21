@@ -9,7 +9,7 @@ FROM deps AS builder
 COPY . .
 # Build with empty articles folder and local database
 ENV ASTRO_DATABASE_FILE=/app/.astro/content.db
-RUN mkdir -p .astro && rm -rf src/content/articles/* && npm run build
+RUN mkdir -p .astro && rm -rf nca-ai-cms-content/* && npm run build
 
 FROM base AS runner
 RUN addgroup -g 1001 -S nodejs && \
@@ -24,7 +24,7 @@ COPY --from=builder /app/db ./db
 COPY --from=builder /app/astro.config.mjs ./
 COPY --from=builder /app/tsconfig.json ./
 
-RUN mkdir -p src/content/articles .astro && \
+RUN mkdir -p nca-ai-cms-content .astro && \
     chown -R astro:nodejs .
 
 USER astro

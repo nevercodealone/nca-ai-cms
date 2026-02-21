@@ -174,7 +174,7 @@ Set variables in **GitLab > Settings > CI/CD > Variables**. The pipeline builds 
 Articles are stored in the filesystem, not the database:
 
 ```
-src/content/articles/{YEAR}/{MONTH}/{SLUG}/
+nca-ai-cms-content/{YEAR}/{MONTH}/{SLUG}/
 ├── index.md      # Article content (Markdown + frontmatter)
 └── hero.webp     # Generated hero image
 ```

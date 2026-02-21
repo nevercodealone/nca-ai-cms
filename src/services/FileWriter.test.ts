@@ -45,7 +45,7 @@ describe('FileWriter', () => {
 
     const expectedFolder = path.join(
       tempDir,
-      'src/content/articles/2025/12/test-article'
+      'nca-ai-cms-content/2025/12/test-article'
     );
     const stats = await fs.stat(expectedFolder);
     expect(stats.isDirectory()).toBe(true);

@@ -33,7 +33,7 @@ export class ArticleService {
   private readonly finder: ArticleFinder;
   private readonly basePath: string;
 
-  constructor(basePath: string = 'src/content/articles') {
+  constructor(basePath: string = 'nca-ai-cms-content') {
     this.finder = new ArticleFinder(basePath);
     this.basePath = basePath;
   }
