@@ -53,7 +53,7 @@ export class Article {
   }
 
   get folderPath(): string {
-    return `src/content/articles/${this.year}/${this.month}/${this.slug.toString()}`;
+    return `nca-ai-cms-content/${this.year}/${this.month}/${this.slug.toString()}`;
   }
 
   get filepath(): string {

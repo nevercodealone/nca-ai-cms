@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ params }) => {
 
   const fullPath = path.join(
     process.cwd(),
-    'src/content/articles',
+    'nca-ai-cms-content',
     normalizedPath
   );
 

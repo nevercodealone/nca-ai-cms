@@ -28,4 +28,4 @@ coverage/
 .idea/
 
 # generated content (articles + co-located images)
-src/content/articles/
+nca-ai-cms-content/
